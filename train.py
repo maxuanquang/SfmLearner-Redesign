@@ -74,6 +74,8 @@ parser.add_argument('-f', '--training-output-freq', type=int,
                     help='frequence for outputting dispnet outputs and warped imgs at training for all scales. '
                          'if 0, will not output',
                     metavar='N', default=0)
+parser.add_argument('--name', dest='name', type=str, default='demo', required=True,
+                    help='name of the experiment, checpoints are stored in checpoints/name')
 
 best_error = -1
 n_iter = 0
@@ -87,8 +89,8 @@ def main():
         from datasets.stacked_sequence_folders import SequenceFolder
     elif args.dataset_format == 'sequential':
         from datasets.sequence_folders import SequenceFolder
-    save_path = save_path_formatter(args, parser)
-    args.save_path = 'checkpoints'/save_path
+    save_path = Path(args.name)
+    args.save_path = '/content/drive/MyDrive/VinAI/Motion segmentation/checkpoints_sfmlearner'/save_path #/timestamp
     print('=> will save everything to {}'.format(args.save_path))
     args.save_path.makedirs_p()
     torch.manual_seed(args.seed)
@@ -570,4 +572,7 @@ def validate_with_gt(args, val_loader, disp_net, epoch, logger, tb_writer, sampl
 
 
 if __name__ == '__main__':
+    import sys
+    with open("/content/drive/MyDrive/VinAI/Motion segmentation/experiment_recorder_sfmlearner.md", "a") as f:
+        f.write('\n python3 ' + ' '.join(sys.argv))
     main()
