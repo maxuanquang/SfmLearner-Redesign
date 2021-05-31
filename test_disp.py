@@ -40,6 +40,7 @@ def main():
     elif args.gt_type == 'stillbox':
         from stillbox_eval.depth_evaluation_utils import test_framework_stillbox as test_framework
 
+    args.max_depth = int(args.max_depth)
     disp_net = DispNetS().to(device)
     weights = torch.load(args.pretrained_dispnet)
     disp_net.load_state_dict(weights['state_dict'])
@@ -63,8 +64,7 @@ def main():
         test_files = [file.relpathto(dataset_dir) for file in sum([dataset_dir.files('*.{}'.format(ext)) for ext in args.img_exts], [])]
 
     framework = test_framework(dataset_dir, test_files, seq_length,
-                               args.min_depth, args.max_depth,
-                               use_gps=args.gps)
+                               args.min_depth, args.max_depth)
 
     print('{} files to test'.format(len(test_files)))
     errors = np.zeros((2, 9, len(test_files)), np.float32)
