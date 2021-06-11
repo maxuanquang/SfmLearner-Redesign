@@ -11,6 +11,9 @@ class DataLoaderCreator():
         elif self.args.dataset_format == 'sequential':
             from datasets.sequence_folders import SequenceFolder
 
+        normalize = custom_transforms.Normalize(mean=[0.5, 0.5, 0.5],
+                                        std=[0.5, 0.5, 0.5])
+
         # Data loading code
         train_transform = custom_transforms.Compose([
             custom_transforms.RandomHorizontalFlip(),
@@ -20,7 +23,8 @@ class DataLoaderCreator():
                                         std=[0.5, 0.5, 0.5])
         ])
 
-        valid_transform = custom_transforms.Compose([custom_transforms.ArrayToTensor(), normalize])
+        valid_transform = custom_transforms.Compose([custom_transforms.ArrayToTensor()
+            , normalize])
 
         print("=> fetching scenes in '{}'".format(self.args.data))
         train_set = SequenceFolder(

@@ -8,7 +8,7 @@ class OptimizerCreator():
 
     def create(self, disp_net, pose_exp_net):
         print('=> setting adam solver')
-
+        print(type(self.args.lr))
         optim_params = [
             {'params': disp_net.parameters(), 'lr': self.args.lr},
             {'params': pose_exp_net.parameters(), 'lr': self.args.lr}
@@ -16,13 +16,5 @@ class OptimizerCreator():
         optimizer = torch.optim.Adam(optim_params,
                                     betas=(self.args.momentum, self.args.beta),
                                     weight_decay=self.args.weight_decay)
-
-        with open(self.args.save_path/self.args.log_summary, 'w') as csvfile:
-            writer = csv.writer(csvfile, delimiter='\t')
-            writer.writerow(['train_loss', 'validation_loss'])
-
-        with open(self.args.save_path/self.args.log_full, 'w') as csvfile:
-            writer = csv.writer(csvfile, delimiter='\t')
-            writer.writerow(['train_loss', 'photo_loss', 'explainability_loss', 'smooth_loss'])
 
         return optimizer

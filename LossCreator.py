@@ -25,15 +25,17 @@ class LossCreator():
         def loss_function(tgt_img, ref_imgs, intrinsics, 
             depth, explainability_mask, pose, 
             rotation_mode, padding_mode):
+
             loss_1, warped, diff = photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics, 
                                                             depth, explainability_mask, pose,
                                                             rotation_mode, padding_mode)
-            loss_1 = loss_1.item()
+
             if w2 > 0:
-                loss_2 = explainability_loss(explainability_mask).item()
+                loss_2 = explainability_loss(explainability_mask)
             else:
                 loss_2 = 0
-            loss_3 = smooth_loss(depth).item()
+                
+            loss_3 = smooth_loss(depth)
 
             loss = w1*loss_1 + w2*loss_2 + w3*loss_3
 

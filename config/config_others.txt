@@ -1,4 +1,4 @@
-epochs=1
+epochs=2
 epoch_size=2000
 print_freq=10
 evaluate=False
@@ -6,4 +6,5 @@ seed=0
 log_summary=progress_log_summary.csv
 log_full=progress_log_full.csv
 training_output_freq=1000
-name=demo
+name=demo_redesign
+checkpoint=/content/drive/MyDrive/VinAI/Motion segmentation/checkpoints_sfmlearner

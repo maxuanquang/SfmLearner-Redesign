@@ -17,12 +17,13 @@ from loss_functions import compute_depth_errors, compute_pose_errors
 from inverse_warp import pose_vec2mat
 from logger import TermLogger, AverageMeter
 
-from .ModelCreator import ModelCreator
-from .DataLoaderCreator import DataLoaderCreator
-from .OptimizerCreator import OptimizerCreator
-from .LossCreator import LossCreator
+from ModelCreator import ModelCreator
+from DataLoaderCreator import DataLoaderCreator
+from OptimizerCreator import OptimizerCreator
+from LossCreator import LossCreator
 
 from tensorboardX import SummaryWriter
+import glob
 
 best_error = -1
 n_iter = 0
@@ -47,6 +48,7 @@ class SfmLearner():
                 'epochs': int,
                 'epoch_size': int,
                 'batch_size': int,
+                'lr': float,
                 'learning_rate': float,
                 'momentum': float,
                 'beta': float,
@@ -63,7 +65,8 @@ class SfmLearner():
                 'smooth_loss_weight': float,
                 'log_output': bool,
                 'training_output_freq': int,
-                'name': str
+                'name': str,
+                'checkpoint': str,
             }
             for i in range(len(values)):
                 if keys[i] not in type_mapping.keys():
@@ -73,7 +76,10 @@ class SfmLearner():
                 elif type_mapping[keys[i]] == float:
                     values[i] = float(values[i])
                 elif type_mapping[keys[i]] == bool:
-                    values[i] = bool(values[i])
+                    if values[i] == "True":
+                        values[i] = True
+                    else:
+                        values[i] = False
             return values
 
         def process_a_config(config_txt_path):
@@ -151,21 +157,16 @@ class SfmLearner():
         if self.args.epoch_size == 0:
             self.args.epoch_size = len(train_loader)
 
+        with open(self.args.save_path/self.args.log_summary, 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter='\t')
+            writer.writerow(['train_loss', 'validation_loss'])
+
+        with open(self.args.save_path/self.args.log_full, 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter='\t')
+            writer.writerow(['train_loss', 'photo_loss', 'explainability_loss', 'smooth_loss'])
+
         logger = TermLogger(n_epochs=self.args.epochs, train_size=min(len(train_loader), self.args.epoch_size), valid_size=len(val_loader))
         logger.epoch_bar.start()
-
-        if self.args.pretrained_disp or self.args.evaluate:
-            logger.reset_valid_bar()
-            if self.args.with_gt and self.args.with_pose:
-                errors, error_names = self.validate_with_gt_pose(self.args, val_loader, disp_net, pose_exp_net, 0, logger, tb_writer)
-            elif self.args.with_gt:
-                errors, error_names = self.validate_with_gt(self.args, val_loader, disp_net, 0, logger, tb_writer)
-            # else:
-            #     errors, error_names = self.validate_without_gt(self.args, val_loader, disp_net, pose_exp_net, 0, logger, tb_writer)
-            for error, name in zip(errors, error_names):
-                tb_writer.add_scalar(name, error, 0)
-            error_string = ', '.join('{} : {:.3f}'.format(name, error) for name, error in zip(error_names[2:9], errors[2:9]))
-            logger.valid_writer.write(' * Avg {}'.format(error_string))
 
         for epoch in range(self.args.epochs):
             logger.epoch_bar.update(epoch)
@@ -404,9 +405,9 @@ class SfmLearner():
             depth = [1/disp for disp in disparities]
             explainability_mask, pose = pose_exp_net(tgt_img, ref_imgs)
 
-            loss, loss_1, warped, diff, loss_2, loss_3 = self.loss_function(tgt_img, ref_imgs, intrinsics, pose,
-                                                                args.rotation_mode, args.padding_mode,
-                                                                explainability_mask, depth)
+            loss, loss_1, warped, diff, loss_2, loss_3 = self.loss_function(tgt_img, ref_imgs, intrinsics,
+                                                                depth, explainability_mask, pose,
+                                                                args.rotation_mode, args.padding_mode)
 
             if log_losses:
                 tb_writer.add_scalar('photometric_error', loss_1.item(), n_iter)

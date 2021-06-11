@@ -1,5 +1,5 @@
 import argparse
-from .SfmLeaner import SfmLearner
+from SfmLeaner import SfmLearner
 
 
 parser = argparse.ArgumentParser(description='Structure from Motion Learner training on KITTI and CityScapes Dataset',
