@@ -1,0 +1,3 @@
+expposenet=PoseExpNet
+pretrained_exp_pose=None
+with_pose=True

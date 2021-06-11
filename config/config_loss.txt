@@ -1,0 +1,3 @@
+photo_loss_weight=1.0
+mask_loss_weight=0.2
+smooth_loss_weight=0.1

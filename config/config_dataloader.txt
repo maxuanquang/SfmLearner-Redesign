@@ -1,0 +1,7 @@
+data=/content/resulting_formatted_data_full_sfmlearner_pytorch
+dataset_format=sequential
+sequence_length=3
+rotation_mode=euler
+padding_mode=zeros
+workers=4
+batch_size=4
