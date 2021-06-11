@@ -1,5 +1,5 @@
 epochs=1
-epoch_size=0
+epoch_size=2000
 print_freq=10
 evaluate=False
 seed=0

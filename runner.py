@@ -10,9 +10,9 @@ parser.add_argument('--test', action='store_true')
 parser.add_argument('--infer', action='store_true')
 
 parser.add_argument('--config-path', dest='config_path', type=str, default='config', required=True)
-parser.add_argument('--epochs', type=int, default=1, required=True)
-parser.add_argument('--epoch-size', type=int, default=100, required=True)
-parser.add_argument('--name', dest='name', type=str, default='demo', required=False)
+# parser.add_argument('--epochs', type=int, default=1, required=True)
+# parser.add_argument('--epoch-size', type=int, default=100, required=True)
+# parser.add_argument('--name', dest='name', type=str, default='demo', required=False)
 
 def main():
     global best_error, n_iter, device

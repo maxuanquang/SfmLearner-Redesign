@@ -30,7 +30,7 @@ device = torch.device("cuda")
 
 class SfmLearner():
     def __init__(self, args):
-        self.args = self.convert_params(args)
+        self.args = self.convert_params(args.config_path)
 
     def convert_params(self, config_folder):
         def convert_type(keys, values):
@@ -137,7 +137,7 @@ class SfmLearner():
         disp_net, pose_exp_net = model_creator.create()
         train_loader, val_loader = dataloader_creator.create()
         optimizer = optimizer_creator.create(disp_net, pose_exp_net)
-        loss_function = loss_creator.create()
+        self.loss_function = loss_creator.create()
 
         # objects serve for training
         save_path = Path(self.args.name)
@@ -154,14 +154,14 @@ class SfmLearner():
         logger = TermLogger(n_epochs=self.args.epochs, train_size=min(len(train_loader), self.args.epoch_size), valid_size=len(val_loader))
         logger.epoch_bar.start()
 
-        if args.pretrained_disp or args.evaluate:
+        if self.args.pretrained_disp or self.args.evaluate:
             logger.reset_valid_bar()
-            if args.with_gt and args.with_pose:
-                errors, error_names = validate_with_gt_pose(args, val_loader, disp_net, pose_exp_net, 0, logger, tb_writer)
-            elif args.with_gt:
-                errors, error_names = validate_with_gt(args, val_loader, disp_net, 0, logger, tb_writer)
-            else:
-                errors, error_names = validate_without_gt(args, val_loader, disp_net, pose_exp_net, 0, logger, tb_writer)
+            if self.args.with_gt and self.args.with_pose:
+                errors, error_names = self.validate_with_gt_pose(self.args, val_loader, disp_net, pose_exp_net, 0, logger, tb_writer)
+            elif self.args.with_gt:
+                errors, error_names = self.validate_with_gt(self.args, val_loader, disp_net, 0, logger, tb_writer)
+            # else:
+            #     errors, error_names = self.validate_without_gt(self.args, val_loader, disp_net, pose_exp_net, 0, logger, tb_writer)
             for error, name in zip(errors, error_names):
                 tb_writer.add_scalar(name, error, 0)
             error_string = ', '.join('{} : {:.3f}'.format(name, error) for name, error in zip(error_names[2:9], errors[2:9]))
@@ -404,8 +404,7 @@ class SfmLearner():
             depth = [1/disp for disp in disparities]
             explainability_mask, pose = pose_exp_net(tgt_img, ref_imgs)
 
-            loss, loss_1, warped, diff, loss_2, loss_3 = loss_function(tgt_img, ref_imgs, intrinsics,
-                                                                depth, explainability_mask, pose,
+            loss, loss_1, warped, diff, loss_2, loss_3 = self.loss_function(tgt_img, ref_imgs, intrinsics, pose,
                                                                 args.rotation_mode, args.padding_mode,
                                                                 explainability_mask, depth)
 
