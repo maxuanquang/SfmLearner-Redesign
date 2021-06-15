@@ -61,9 +61,9 @@ class ModelCreator():
         elif model == 'posenet':
             print("=> creating pose network")
 
-            if self.args.posenet == 'PoseNet6':
+            if self.args.posenet_architecture == 'PoseNet6':
                 pose_net = models.PoseNet6(nb_ref_imgs=self.args.sequence_length - 1).to(torch.device("cuda"))
-            elif self.args.posenet == 'PoseNetB6':
+            elif self.args.posenet_architecture == 'PoseNetB6':
                 pose_net = models.PoseNetB6(nb_ref_imgs=self.args.sequence_length - 1).to(torch.device("cuda"))
 
             if self.args.pretrained_pose:
