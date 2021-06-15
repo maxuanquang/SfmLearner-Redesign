@@ -21,6 +21,7 @@ from ModelCreator import ModelCreator
 from DataLoaderCreator import DataLoaderCreator
 from OptimizerCreator import OptimizerCreator
 from LossCreator import LossCreator
+from Reporter import Reporter
 
 from tensorboardX import SummaryWriter
 import glob
@@ -33,107 +34,10 @@ class SfmLearner():
     def __init__(self, args):
         self.args = self.convert_params(args.config_path)
 
-    def convert_params(self, config_folder):
-        def convert_type(keys, values):
-            type_mapping = {
-                'architecture': str,
-                'data': str,
-                'dataset_format': str,
-                'sequence_length': int,
-                'rotation_mode': str,
-                'padding_mode': str,
-                'with_gt': bool,
-                'with_pose': bool,
-                'workers': int,
-                'epochs': int,
-                'epoch_size': int,
-                'batch_size': int,
-                'lr': float,
-                'learning_rate': float,
-                'momentum': float,
-                'beta': float,
-                'weight_decay': float,
-                'print_freq': int,
-                'evaluate': bool,
-                'pretrained_disp': str,
-                'pretrained_exppose': str,
-                'seed': int,
-                'log_summary': str,
-                'log_full': str,
-                'photo_loss_weight': float,
-                'mask_loss_weight': float,
-                'smooth_loss_weight': float,
-                'log_output': bool,
-                'training_output_freq': int,
-                'name': str,
-                'checkpoint': str,
-            }
-            for i in range(len(values)):
-                if keys[i] not in type_mapping.keys():
-                    continue
-                elif type_mapping[keys[i]] == int:
-                    values[i] = int(values[i])
-                elif type_mapping[keys[i]] == float:
-                    values[i] = float(values[i])
-                elif type_mapping[keys[i]] == bool:
-                    if values[i] == "True":
-                        values[i] = True
-                    else:
-                        values[i] = False
-            return values
-
-        def process_a_config(config_txt_path):
-            with open(config_txt_path, 'r') as f:
-                content = f.readlines()
-            for i in range(len(content)):
-                content[i] = content[i][:-1]
-
-            keys = []
-            values = []
-
-            for line in content:
-                if line[0] == '#':
-                    continue
-                key, value = line.split('=')
-                keys.append(key)
-                values.append(value)
-
-            values = convert_type(keys, values)
-            my_dictionary = {}  
-            for key, value in zip(keys, values):
-                my_dictionary[key] = value
-
-            return my_dictionary
-
-        def merge_configs(list_dict):
-            args = {}
-            for item in list_dict:
-                args.update(item)
-
-            # Turns a dictionary into a class
-            class Dict2Class(object):
-                def __init__(self, my_dict):
-                    for key in my_dict:
-                        setattr(self, key, my_dict[key])
-
-            args = Dict2Class(args)
-
-            return args
-
-        if config_folder[-1] == '/':
-            config_folder = config_folder[:-1]
-
-        config_txt_paths = glob.glob(config_folder + "/config*.txt")
-
-        list_dict = []
-        for path in config_txt_paths:
-            list_dict.append(process_a_config(path))
-
-        return merge_configs(list_dict)
-
     def train(self):
         # create main objects
         global best_error, n_iter, device
+        torch.manual_seed(self.args.seed)
 
         model_creator = ModelCreator(self.args)
         optimizer_creator = OptimizerCreator(self.args)
@@ -145,26 +49,12 @@ class SfmLearner():
         optimizer = optimizer_creator.create(disp_net, pose_exp_net)
         self.loss_function = loss_creator.create()
 
-        # objects serve for training
-        save_path = Path(self.args.name)
-        self.args.save_path = '/content/drive/MyDrive/VinAI/Motion segmentation/checkpoints_sfmlearner'/save_path #/timestamp
-        print('=> will save everything to {}'.format(self.args.save_path))
-        self.args.save_path.makedirs_p()
-        torch.manual_seed(self.args.seed)
-
-        tb_writer = SummaryWriter(self.args.save_path)
-
         if self.args.epoch_size == 0:
             self.args.epoch_size = len(train_loader)
 
-        with open(self.args.save_path/self.args.log_summary, 'w') as csvfile:
-            writer = csv.writer(csvfile, delimiter='\t')
-            writer.writerow(['train_loss', 'validation_loss'])
-
-        with open(self.args.save_path/self.args.log_full, 'w') as csvfile:
-            writer = csv.writer(csvfile, delimiter='\t')
-            writer.writerow(['train_loss', 'photo_loss', 'explainability_loss', 'smooth_loss'])
-
+        # objects serve for training
+        reporter = Reporter(self.args)
+        tb_writer = SummaryWriter(self.args.save_path)
         logger = TermLogger(n_epochs=self.args.epochs, train_size=min(len(train_loader), self.args.epoch_size), valid_size=len(val_loader))
         logger.epoch_bar.start()
 
@@ -206,11 +96,10 @@ class SfmLearner():
                     'state_dict': pose_exp_net.module.state_dict()
                 },
                 is_best)
+            reporter.update_log_summary(train_loss, decisive_error)
 
-            with open(self.args.save_path/self.args.log_summary, 'a') as csvfile:
-                writer = csv.writer(csvfile, delimiter='\t')
-                writer.writerow([train_loss, decisive_error])
         logger.epoch_bar.finish()
+        reporter.create_report()
 
         return 0
 
@@ -433,9 +322,9 @@ class SfmLearner():
             batch_time.update(time.time() - end)
             end = time.time()
 
-            with open(args.save_path/args.log_full, 'a') as csvfile:
-                writer = csv.writer(csvfile, delimiter='\t')
-                writer.writerow([loss.item(), loss_1.item(), loss_2.item() if w2 > 0 else 0, loss_3.item()])
+            # with open(args.save_path/args.log_full, 'a') as csvfile:
+            #     writer = csv.writer(csvfile, delimiter='\t')
+            #     writer.writerow([loss.item(), loss_1.item(), loss_2.item() if w2 > 0 else 0, loss_3.item()])
             logger.train_bar.update(i+1)
             if i % args.print_freq == 0:
                 logger.train_writer.write('Train: Time {} Data {} Loss {}'.format(batch_time, data_time, losses))
@@ -445,4 +334,102 @@ class SfmLearner():
             n_iter += 1
 
         return losses.avg[0]
+
+    def convert_params(self, config_folder):
+        def convert_type(keys, values):
+            type_mapping = {
+                'architecture': str,
+                'data': str,
+                'dataset_format': str,
+                'sequence_length': int,
+                'rotation_mode': str,
+                'padding_mode': str,
+                'with_gt': bool,
+                'with_pose': bool,
+                'workers': int,
+                'epochs': int,
+                'epoch_size': int,
+                'batch_size': int,
+                'lr': float,
+                'learning_rate': float,
+                'momentum': float,
+                'beta': float,
+                'weight_decay': float,
+                'print_freq': int,
+                'evaluate': bool,
+                'pretrained_disp': str,
+                'pretrained_exppose': str,
+                'seed': int,
+                'log_summary': str,
+                'log_full': str,
+                'photo_loss_weight': float,
+                'mask_loss_weight': float,
+                'smooth_loss_weight': float,
+                'log_output': bool,
+                'training_output_freq': int,
+                'name': str,
+                'checkpoint': str,
+            }
+            for i in range(len(values)):
+                if keys[i] not in type_mapping.keys():
+                    continue
+                elif type_mapping[keys[i]] == int:
+                    values[i] = int(values[i])
+                elif type_mapping[keys[i]] == float:
+                    values[i] = float(values[i])
+                elif type_mapping[keys[i]] == bool:
+                    if values[i] == "True":
+                        values[i] = True
+                    else:
+                        values[i] = False
+            return values
+
+        def process_a_config(config_txt_path):
+            with open(config_txt_path, 'r') as f:
+                content = f.readlines()
+            for i in range(len(content)):
+                content[i] = content[i][:-1]
+
+            keys = []
+            values = []
+
+            for line in content:
+                if line[0] == '#':
+                    continue
+                key, value = line.split('=')
+                keys.append(key)
+                values.append(value)
+
+            values = convert_type(keys, values)
+            my_dictionary = {}  
+            for key, value in zip(keys, values):
+                my_dictionary[key] = value
+
+            return my_dictionary
+
+        def merge_configs(list_dict):
+            args = {}
+            for item in list_dict:
+                args.update(item)
+
+            # Turns a dictionary into a class
+            class Dict2Class(object):
+                def __init__(self, my_dict):
+                    for key in my_dict:
+                        setattr(self, key, my_dict[key])
+
+            args = Dict2Class(args)
+
+            return args
+
+        if config_folder[-1] == '/':
+            config_folder = config_folder[:-1]
+
+        config_txt_paths = glob.glob(config_folder + "/config*.txt")
+
+        list_dict = []
+        for path in config_txt_paths:
+            list_dict.append(process_a_config(path))
+
+        return merge_configs(list_dict)
 
