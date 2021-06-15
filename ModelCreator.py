@@ -37,7 +37,7 @@ class ModelCreator():
             return disp_net
 
         # create model
-        if model == 'expposenet':
+        if model == 'poseexpnet':
             print("=> creating explainability pose network")
 
             output_exp = self.args.mask_loss_weight > 0

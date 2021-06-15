@@ -44,7 +44,8 @@ class SfmLearner():
         dataloader_creator = DataLoaderCreator(self.args)
         loss_creator = LossCreator(self.args)
 
-        disp_net, pose_exp_net = model_creator.create()
+        disp_net = model_creator.create(model='dispnet')
+        pose_exp_net = model_creator.create(model='poseexpnet')
         train_loader, val_loader = dataloader_creator.create()
         optimizer = optimizer_creator.create(disp_net, pose_exp_net)
         self.loss_function = loss_creator.create()

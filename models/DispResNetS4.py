@@ -94,10 +94,10 @@ def crop_like(input, ref):
     return input[:, :, :ref.size(2), :ref.size(3)]
 
 
-class DispResNetS6(nn.Module):
+class DispResNetS4(nn.Module):
 
     def __init__(self, alpha=10, beta=0.01):
-        super(DispResNetS6, self).__init__()
+        super(DispResNetS4, self).__init__()
 
         self.alpha = alpha
         self.beta = beta
