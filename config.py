@@ -115,12 +115,6 @@ class SfmLearnerConfig:
                                 default=None, 
                                 metavar='PATH',
                                 help='path to pre-trained Exp Pose net model')
-        self.parser.add_argument('--with-pose', 
-                                type=self.str2bool,
-                                default=False, 
-                                help='use pose ground truth for validation, You need to store it in text files of 12 columns see data/kitti_raw_loader.py for an example, Note that for kitti, it is recommend to use odometry train set to test pose')
-
-        # CONFIG POSE NET
         self.parser.add_argument('--posenet-architecture',
                                 type=str,
                                 default='PoseNet',
