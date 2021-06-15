@@ -1,3 +1,0 @@
-dispnet=DispNetS
-pretrained_disp=None
-with_gt=True

@@ -7,21 +7,21 @@ class ModelCreator():
     def __init__(self, args):
         self.args = args
     def create(self, model='dispnet'):
-        # create model
+        # create disp model
         if model == 'dispnet':
             print("=> creating disparity network")
 
-            if self.args.dispnet == 'DispNetS':
+            if self.args.dispnet_architecture == 'DispNetS':
                 disp_net = models.DispNetS().to(torch.device("cuda"))
-            elif self.args.dispnet == 'DispResNet4':
+            elif self.args.dispnet_architecture == 'DispResNet4':
                 disp_net = models.DispResNet4().to(torch.device("cuda"))
-            elif self.args.dispnet == 'DispResNetS4':
+            elif self.args.dispnet_architecture == 'DispResNetS4':
                 disp_net = models.DispResNetS4().to(torch.device("cuda"))
-            elif self.args.dispnet == 'DispNetS6':
+            elif self.args.dispnet_architecture == 'DispNetS6':
                 disp_net = models.DispNetS6().to(torch.device("cuda"))
-            elif self.args.dispnet == 'DispResNet6':
+            elif self.args.dispnet_architecture == 'DispResNet6':
                 disp_net = models.DispResNet6().to(torch.device("cuda"))
-            elif self.args.dispnet == 'DispResNetS6':
+            elif self.args.dispnet_architecture == 'DispResNetS6':
                 disp_net = models.DispResNetS6().to(torch.device("cuda"))
 
             if self.args.pretrained_disp:
@@ -36,8 +36,8 @@ class ModelCreator():
 
             return disp_net
 
-        # create model
-        if model == 'poseexpnet':
+        # create poseexp model
+        elif model == 'poseexpnet':
             print("=> creating explainability pose network")
 
             output_exp = self.args.mask_loss_weight > 0
@@ -56,3 +56,24 @@ class ModelCreator():
             pose_exp_net = torch.nn.DataParallel(pose_exp_net)
 
             return pose_exp_net
+
+        # create pose model
+        elif model == 'posenet':
+            print("=> creating pose network")
+
+            if self.args.posenet == 'PoseNet6':
+                pose_net = models.PoseNet6(nb_ref_imgs=self.args.sequence_length - 1).to(torch.device("cuda"))
+            elif self.args.posenet == 'PoseNetB6':
+                pose_net = models.PoseNetB6(nb_ref_imgs=self.args.sequence_length - 1).to(torch.device("cuda"))
+
+            if self.args.pretrained_pose:
+                print("=> using pre-trained weights for explainabilty and pose net")
+                weights = torch.load(self.args.pretrained_pose)
+                pose_net.load_state_dict(weights['state_dict'], strict=False)
+            else:
+                pose_net.init_weights()
+
+            cudnn.benchmark = True
+            pose_net = torch.nn.DataParallel(pose_net)
+
+            return pose_net

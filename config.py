@@ -91,7 +91,7 @@ class SfmLearnerConfig:
                                 default=0.1)
                               
         # CONFIG DISPNET
-        self.parser.add_argument('--dispnet',
+        self.parser.add_argument('--dispnet-architecture',
                                 type=str,
                                 default='DispNetS',
                                 help='disparity network architecture')
@@ -106,12 +106,27 @@ class SfmLearnerConfig:
                                 help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
 
         # CONFIG POSE EXP NET
-        self.parser.add_argument('--poseexpnet',
+        self.parser.add_argument('--poseexpnet-architecture',
                                 type=str,
                                 default='PoseExpNet',
                                 help='disparity network architecture')
         self.parser.add_argument('--pretrained-exppose', 
                                 dest='pretrained_exp_pose', 
+                                default=None, 
+                                metavar='PATH',
+                                help='path to pre-trained Exp Pose net model')
+        self.parser.add_argument('--with-pose', 
+                                type=self.str2bool,
+                                default=False, 
+                                help='use pose ground truth for validation, You need to store it in text files of 12 columns see data/kitti_raw_loader.py for an example, Note that for kitti, it is recommend to use odometry train set to test pose')
+
+        # CONFIG POSE NET
+        self.parser.add_argument('--posenet-architecture',
+                                type=str,
+                                default='PoseNet',
+                                help='disparity network architecture')
+        self.parser.add_argument('--pretrained-pose', 
+                                dest='pretrained_pose', 
                                 default=None, 
                                 metavar='PATH',
                                 help='path to pre-trained Exp Pose net model')
@@ -169,6 +184,10 @@ class SfmLearnerConfig:
                                 help='frequence for outputting dispnet outputs and warped imgs at training for all scales if 0, will not output',
                                 metavar='N', 
                                 default=1000)
+        self.parser.add_argument('--nlevels', 
+                                default=4, 
+                                type=int, 
+                                help='seed for random functions, and network initialization')
         self.parser.add_argument('--name', 
                                 dest='name', 
                                 type=str, 

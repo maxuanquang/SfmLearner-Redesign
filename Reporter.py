@@ -18,6 +18,7 @@ class Reporter():
         with open(self.args.save_path/self.args.log_summary, 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter='\t')
             writer.writerow([train_loss, decisive_error])
+            
     def create_report(self):
         # if self.args.train:
         #     report_path = self.args.save_path/'train_report.txt'

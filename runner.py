@@ -1,29 +1,23 @@
-import argparse
+# Copyright Niantic 2019. Patent Pending. All rights reserved.
+#
+# This software is licensed under the terms of the Monodepth2 licence
+# which allows for non-commercial use only, the full terms of which are made
+# available in the LICENSE file.
+
+from __future__ import absolute_import, division, print_function
+
 from SfmLeaner import SfmLearner
+from config import SfmLearnerConfig
+
+config = SfmLearnerConfig()
+args = config.parse()
 
 
-parser = argparse.ArgumentParser(description='Structure from Motion Learner training on KITTI and CityScapes Dataset',
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-parser.add_argument('--train', action='store_true')
-parser.add_argument('--test', action='store_true')
-parser.add_argument('--infer', action='store_true')
-
-parser.add_argument('--config-path', dest='config_path', type=str, default='config', required=True)
-
-def main():
-    global best_error, n_iter, device
-    args = parser.parse_args()
+if __name__ == "__main__":
     sfmlearner = SfmLearner(args)
-
     if args.train:
         sfmlearner.train()
     elif args.test:
         sfmlearner.test()
-    elif args.infer:
+    if args.infer:
         sfmlearner.infer()
-    # elif args.prepare_dataset:
-    #     sfmlearner.prepare_dataset()
-
-if __name__ == '__main__':
-    main()
