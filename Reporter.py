@@ -19,4 +19,7 @@ class Reporter():
             writer = csv.writer(csvfile, delimiter='\t')
             writer.writerow([train_loss, decisive_error])
     def create_report(self):
+        # if self.args.train:
+        #     report_path = self.args.save_path/'train_report.txt'
+        #     with open(report_path, 'a') as f:
         pass

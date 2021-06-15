@@ -32,7 +32,7 @@ device = torch.device("cuda")
 
 class SfmLearner():
     def __init__(self, args):
-        self.args = self.convert_params(args.config_path)
+        self.args = self.convert_params(args)
 
     def train(self):
         # create main objects
@@ -335,7 +335,7 @@ class SfmLearner():
 
         return losses.avg[0]
 
-    def convert_params(self, config_folder):
+    def convert_params(self, config):
         def convert_type(keys, values):
             type_mapping = {
                 'architecture': str,
@@ -369,6 +369,9 @@ class SfmLearner():
                 'training_output_freq': int,
                 'name': str,
                 'checkpoint': str,
+                'train': bool,
+                'test': bool,
+                'infer': bool,
             }
             for i in range(len(values)):
                 if keys[i] not in type_mapping.keys():
@@ -422,6 +425,7 @@ class SfmLearner():
 
             return args
 
+        config_folder = config.config_path
         if config_folder[-1] == '/':
             config_folder = config_folder[:-1]
 
@@ -430,6 +434,13 @@ class SfmLearner():
         list_dict = []
         for path in config_txt_paths:
             list_dict.append(process_a_config(path))
+
+        mode_dict = {}
+        mode_dict['train'] = config.train
+        mode_dict['test'] = config.test
+        mode_dict['infer'] = config.infer
+
+        list_dict.append(mode_dict)
 
         return merge_configs(list_dict)
 
