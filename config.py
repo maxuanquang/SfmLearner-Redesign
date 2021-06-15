@@ -91,7 +91,7 @@ class SfmLearnerConfig:
                                 default=0.1)
                               
         # CONFIG DISPNET
-        self.parser.add_argument('--dispnet-architecture',
+        self.parser.add_argument('--dispnet',
                                 type=str,
                                 default='DispNetS',
                                 help='disparity network architecture')
@@ -106,7 +106,7 @@ class SfmLearnerConfig:
                                 help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
 
         # CONFIG POSE EXP NET
-        self.parser.add_argument('--poseexpnet-architecture',
+        self.parser.add_argument('--poseexpnet',
                                 type=str,
                                 default='PoseExpNet',
                                 help='disparity network architecture')
