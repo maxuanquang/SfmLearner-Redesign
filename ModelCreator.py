@@ -24,7 +24,7 @@ class ModelCreator():
             elif self.args.dispnet == 'DispResNetS6':
                 disp_net = models.DispResNetS6().to(torch.device("cuda"))
 
-            if self.args.pretrained_disp != "None":
+            if self.args.pretrained_disp:
                 print("=> using pre-trained weights for Dispnet")
                 weights = torch.load(self.args.pretrained_disp)
                 disp_net.load_state_dict(weights['state_dict'])
@@ -45,7 +45,7 @@ class ModelCreator():
                 print("=> no mask loss, PoseExpnet will only output pose")
             pose_exp_net = models.PoseExpNet(nb_ref_imgs=self.args.sequence_length - 1, output_exp=self.args.mask_loss_weight > 0).to(torch.device("cuda"))
 
-            if self.args.pretrained_exp_pose != "None":
+            if self.args.pretrained_exp_pose:
                 print("=> using pre-trained weights for explainabilty and pose net")
                 weights = torch.load(self.args.pretrained_exp_pose)
                 pose_exp_net.load_state_dict(weights['state_dict'], strict=False)
