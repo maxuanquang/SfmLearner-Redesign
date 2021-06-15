@@ -32,7 +32,8 @@ device = torch.device("cuda")
 
 class SfmLearner():
     def __init__(self, args):
-        self.args = self.convert_params(args)
+        # self.args = self.convert_params(args)
+        self.args = args
 
     def train(self):
         # create main objects
