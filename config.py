@@ -141,7 +141,7 @@ class SfmLearnerConfig:
 
         self.parser.add_argument('--L1-photometric-weight', 
                                 type=float, 
-                                default=0,
+                                default=1,
                                 help='L1 weight in photometric reconstruction and photometric flow loss')
         self.parser.add_argument('--robust-L1-photometric-weight', 
                                 type=float, 
@@ -254,7 +254,7 @@ class SfmLearnerConfig:
                                 help='decisive error for choosing best dispnet model')
         #endregion
 
-        # CONFIG POSE - POSEEXP NET
+        #region CONFIG POSE - POSEEXP NET
         # If poseexpnet_architecture is set, then posenet_architecture have to be None and vice versa
         self.parser.add_argument('--poseexpnet-architecture',
                                 default='PoseExpNet',
@@ -276,8 +276,9 @@ class SfmLearnerConfig:
                                 type=self.str2bool,
                                 default=False, 
                                 help='use pose ground truth for validation, You need to store it in text files of 12 columns see data/kitti_raw_loader.py for an example, Note that for kitti, it is recommend to use odometry train set to test pose')
+        #endregion
 
-        # CONFIG OTHER
+        #region CONFIG OTHER
         self.parser.add_argument('--train',
                                 action='store_true',
                                 help='train model')
@@ -335,6 +336,7 @@ class SfmLearnerConfig:
                                 type=str, 
                                 default='demo',
                                 help='name of the experiment, checpoints are stored in checpoints/name')
+        #endregion
 
     def str2bool(self, v):
         if isinstance(v, bool):

@@ -20,6 +20,7 @@ class LossCreator():
     def __init__(self, args):
         self.args = args
     def create(self):
+        
 
         w1, w2, w3 = self.args.photo_loss_weight, self.args.mask_loss_weight, self.args.smooth_loss_weight
         def loss_function(tgt_img, ref_imgs, intrinsics, 
