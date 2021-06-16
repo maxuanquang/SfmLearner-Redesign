@@ -41,19 +41,7 @@ path.py
 
 ### What has been done
 
-* Training has been tested on KITTI and CityScapes.
-* Dataset preparation has been largely improved, and now stores image sequences in folders, making sure that movement is each time big enough between each frame
-* That way, training is now significantly faster, running at ~0.14sec per step vs ~0.2s per steps initially (on a single GTX980Ti)
-* In addition you don't need to prepare data for a particular sequence length anymore as stacking is made on the fly.
-* You can still choose the former stacked frames dataset format.
-* Convergence is now almost as good as original paper with same hyper parameters
-* You can know compare with groud truth for your validation set. It is still possible to validate without, but you now can see that minimizing photometric error is not equivalent to optimizing depth map.
-
-### Differences with official Implementation
-
-* Smooth Loss is different from official repo. Instead of applying it to disparity, we apply it to depth. Original disparity smooth loss did not work well (don't know why !) and it did not even converge at all with weight values used (0.5).
-* loss is divided by `2.3` when downscaling instead of `2`. This is the results of empiric experiments, so the optimal value is clearly not carefully determined.
-* As a consequence, with a smooth loss of `2.0̀`, depth test is better, but Pose test is worse. To revert smooth loss back to original, you can change it [here](train.py#L270)
+* Train disparity network, pose network, mask network, optical flow network easily with different architectures, different losses and different strategies.
 
 ## Preparing training data
 Preparation is roughly the same command as in the original code.
@@ -83,15 +71,15 @@ and visualize the training progress by opening [https://localhost:6006](https://
 
 ## Evaluation
 
-Disparity map generation can be done with `run_inference.py`
+Disparity map generation can be done with `runner.py`
 ```bash
-python3 runner.py --infer --pretrained /path/to/dispnet --dataset-dir /path/pictures/dir --output-dir /path/to/output/dir
+python3 runner.py --infer --disp --pretrained /path/to/dispnet --dataset-dir /path/pictures/dir --output-dir /path/to/output/dir
 ```
 Will run inference on all pictures inside `dataset-dir` and save a jpg of disparity (or depth) to `output-dir` for each one see script help (`-h`) for more options.
 
 Disparity evaluation is avalaible
 ```bash
-python3 runner.py --test --pretrained-dispnet /path/to/dispnet --pretrained-posenet /path/to/posenet --dataset-dir /path/to/KITTI_raw --dataset-list /path/to/test_files_list
+python3 runner.py --test --disp --pretrained-dispnet /path/to/dispnet --pretrained-posenet /path/to/posenet --dataset-dir /path/to/KITTI_raw --dataset-list /path/to/test_files_list
 ```
 
 Test file list is available in kitti eval folder. To get fair comparison with [Original paper evaluation code](https://github.com/tinghuiz/SfMLearner/blob/master/kitti_eval/eval_depth.py), don't specify a posenet. However, if you do,  it will be used to solve the scale factor ambiguity, the only ground truth used to get it will be vehicle speed which is far more acceptable for real conditions quality measurement, but you will obviously get worse results.
@@ -99,7 +87,7 @@ Test file list is available in kitti eval folder. To get fair comparison with [O
 Pose evaluation is also available on [Odometry dataset](http://www.cvlibs.net/datasets/kitti/eval_odometry.php). Be sure to download both color images and pose !
 
 ```bash
-python3 test_pose.py /path/to/posenet --dataset-dir /path/to/KITIT_odometry --sequences [09]
+python3 runner.py --test --disp --pretrained-pose /path/to/posenet --dataset-dir /path/to/KITIT_odometry --sequences [09]
 ```
 
 **ATE** (*Absolute Trajectory Error*) is computed as long as **RE** for rotation (*Rotation Error*). **RE** between `R1` and `R2` is defined as the angle of `R1*R2^-1` when converted to axis/angle. It corresponds to `RE = arccos( (trace(R1 @ R2^-1) - 1) / 2)`.
@@ -130,19 +118,6 @@ python3 train.py /path/to/the/formatted/data/ -b4 -m0 -s2.0 --epoch-size 1000 --
 |ATE | 0.0179 (std. 0.0110) | 0.0141 (std. 0.0115) |
 |RE  | 0.0018 (std. 0.0009) | 0.0018 (std. 0.0011) | 
 
-
-## Discussion
-
-Here I try to link the issues that I think raised interesting questions about scale factor, pose inference, and training hyperparameters
-
- - [Issue 48](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/48) : Why is target frame at the center of the sequence ?
- - [Issue 39](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/39) : Getting pose vector without the scale factor uncertainty
- - [Issue 46](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/46) : Is Interpolated groundtruth better than sparse groundtruth ?
- - [Issue 45](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/45) : How come the inverse warp is absolute and pose and depth are only relative ?
- - [Issue 32](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/32) : Discussion about validation set, and optimal batch size
- - [Issue 25](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/25) : Why filter out static frames ?
- - [Issue 24](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/24) : Filtering pixels out of the photometric loss
- - [Issue 60](https://github.com/ClementPinard/SfmLearner-Pytorch/issues/60) : Inverse warp is only one way !
 
 ## Other Implementations
 
