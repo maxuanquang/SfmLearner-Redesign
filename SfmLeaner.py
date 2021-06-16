@@ -88,8 +88,11 @@ class SfmLearner():
             for error, name in zip(errors, error_names):
                 self.tb_writer.add_scalar(name, error, epoch)
 
-            # Up to you to chose the most relevant error to measure your model's performance, careful some measures are to maximize (such as a1,a2,a3)
-            decisive_error = errors[1]
+            # Decisive error to measure your model's performance specified in config
+            for i, name in enumerate(error_names):
+                if self.args.dispnet_decisive_error == name:
+                    decisive_error = errors[i]
+                break
             if best_error < 0:
                 best_error = decisive_error
 

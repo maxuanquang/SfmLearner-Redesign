@@ -233,7 +233,7 @@ class SfmLearnerConfig:
 
         #endregion
                               
-        # CONFIG DISPNET
+        #region CONFIG DISPNET
         self.parser.add_argument('--dispnet-architecture',
                                 type=str,
                                 default='DispNetS',
@@ -247,6 +247,12 @@ class SfmLearnerConfig:
                                 type=self.str2bool, 
                                 default=True, 
                                 help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
+        self.parser.add_argument('--dispnet-decisive-error',
+                                type=str,
+                                choices=['abs_diff', 'abs_rel', 'sq_rel', 'a1', 'a2', 'a3'],
+                                default='abs_rel',
+                                help='decisive error for choosing best dispnet model')
+        #endregion
 
         # CONFIG POSE - POSEEXP NET
         # If poseexpnet_architecture is set, then posenet_architecture have to be None and vice versa
