@@ -314,6 +314,7 @@ class SfmLearner():
 
             loss, loss_1, warped, diff, loss_2, loss_3 = self.loss_function(tgt_img, ref_imgs, intrinsics,
                                                                             depth, explainability_mask, pose,
+                                                                            self.args,
                                                                             self.args.rotation_mode, self.args.padding_mode)
 
             if log_losses:

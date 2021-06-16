@@ -52,6 +52,7 @@ def photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics,
 
         warped_imgs = []
         diff_maps = []
+        loss_list = []
 
         for i, ref_img in enumerate(ref_imgs_scaled):
             current_pose = pose[:, i]
@@ -61,14 +62,38 @@ def photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics,
                                                         rotation_mode, padding_mode)
             diff = (tgt_img_scaled - ref_img_warped) * valid_points.unsqueeze(1).float()
 
-            if explainability_mask is not None:
-                diff = diff * explainability_mask[:,i:i+1].expand_as(diff)
+            if args.L1_photometric:
+                diff = l1_per_pix(diff)*args.L1_photometric_weight
+            elif args.robust_L1_photometric:
+                diff = robust_l1_per_pix(diff)*args.robust_L1_photometric_weight
+            elif args.L2_photometric:
+                diff = l2_per_pix(diff)*args.L2_photometric_weight
 
-            reconstruction_loss += diff.abs().mean()
-            assert((reconstruction_loss == reconstruction_loss).item() == 1)
+            if args.ssim_photometric:
+                ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_points
+                ssim_loss = ssim_loss * args.ssim_photometric_weight
+            else:
+                ssim_loss = 0
+
+            current_loss = diff + ssim_loss
+
+            if explainability_mask is not None:
+                current_loss = current_loss * explainability_mask[:,i:i+1].expand_as(current_loss)
+
+            if args.mean_photometric:
+                reconstruction_loss += current_loss.mean()
+                assert((reconstruction_loss == reconstruction_loss).item() == 1)
+            elif args.min_photometric:
+                current_loss = current_loss.mean(1)
+                loss_list.append(current_loss)
 
             warped_imgs.append(ref_img_warped[0])
             diff_maps.append(diff[0])
+        
+        if args.min_photometric:
+            loss_list = torch.stack(loss_list)
+            loss_list = loss_list.min(0)[0]
+            reconstruction_loss = loss_list.mean()
 
         return reconstruction_loss, warped_imgs, diff_maps
 

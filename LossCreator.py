@@ -20,15 +20,16 @@ class LossCreator():
     def __init__(self, args):
         self.args = args
     def create(self):
-        
+
 
         w1, w2, w3 = self.args.photo_loss_weight, self.args.mask_loss_weight, self.args.smooth_loss_weight
         def loss_function(tgt_img, ref_imgs, intrinsics, 
             depth, explainability_mask, pose, 
-            rotation_mode, padding_mode):
+            rotation_mode, padding_mode, args):
 
             loss_1, warped, diff = photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics, 
                                                             depth, explainability_mask, pose,
+                                                            args,
                                                             rotation_mode, padding_mode)
 
             if w2 > 0:
