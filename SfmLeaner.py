@@ -314,8 +314,7 @@ class SfmLearner():
 
             loss, loss_1, warped, diff, loss_2, loss_3 = self.loss_function(tgt_img, ref_imgs, intrinsics,
                                                                             depth, explainability_mask, pose,
-                                                                            self.args,
-                                                                            self.args.rotation_mode, self.args.padding_mode)
+                                                                            self.args.rotation_mode, self.args.padding_mode, self.args)
 
             if log_losses:
                 self.tb_writer.add_scalar('photometric_error', loss_1.item(), n_iter)
