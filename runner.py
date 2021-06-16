@@ -12,12 +12,11 @@ from config import SfmLearnerConfig
 config = SfmLearnerConfig()
 args = config.parse()
 
-
 if __name__ == "__main__":
     sfmlearner = SfmLearner(args)
     if args.train:
         sfmlearner.train()
     elif args.test:
         sfmlearner.test()
-    if args.infer:
+    elif args.infer:
         sfmlearner.infer()

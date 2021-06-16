@@ -17,7 +17,7 @@ class SfmLearnerConfig:
     def __init__(self):
         self.parser = argparse.ArgumentParser(description="SfmLearner configuration")
 
-        # CONFIG DATALOADER
+        #region CONFIG DATALOADER
         self.parser.add_argument('--data',
                                 type=str,
                                 default='/content/resulting_formatted_data_full_sfmlearner_pytorch',
@@ -50,8 +50,9 @@ class SfmLearnerConfig:
                                 type=int,
                                 metavar='N', 
                                 help='mini-batch size')
+        #endregion
 
-        # CONFIG OPTIMIZER  
+        #region CONFIG OPTIMIZER  
         self.parser.add_argument('--lr', '--learning-rate', 
                                 default=2e-4, 
                                 type=float,
@@ -72,23 +73,165 @@ class SfmLearnerConfig:
                                 type=float,
                                 metavar='W', 
                                 help='weight decay')
+        #endregion
 
-        # CONFIG LOSS FUNCTION
+        #region CONFIG LOSS FUNCTION
+
+        #region Config loss components
+        self.parser.add_argument('--photometric-reconstruction-loss',
+                                type=self.str2bool, 
+                                default=True, 
+                                help='use photometric reconstruction loss')
+        self.parser.add_argument('--mask-loss',
+                                type=self.str2bool, 
+                                default=True, 
+                                help='use mask loss')
+        self.parser.add_argument('--smooth-loss',
+                                type=self.str2bool, 
+                                default=True, 
+                                help='use smoothness loss')
+        self.parser.add_argument('--photometric-flow-loss',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use photometric flow loss')
+        self.parser.add_argument('--concensus-depth-flow-loss',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use consensus depth flow loss')
+
         self.parser.add_argument('-p', '--photo-loss-weight', 
-                                type=float, 
-                                help='weight for photometric loss', 
-                                metavar='W', 
-                                default=1)
+                                type=float,
+                                default=1,
+                                help='weight for photometric reconstruction loss')
         self.parser.add_argument('-m', '--mask-loss-weight', 
                                 type=float, 
-                                help='weight for explainabilty mask loss', 
-                                metavar='W', 
-                                default=0.2)
+                                default=0.2,
+                                help='weight for explainabilty mask loss')
         self.parser.add_argument('-s', '--smooth-loss-weight', 
                                 type=float, 
-                                help='weight for disparity smoothness loss', 
-                                metavar='W', 
-                                default=0.1)
+                                default=0.1,
+                                help='weight for smoothness loss')
+        self.parser.add_argument('--photometric-flow-loss-weight', 
+                                type=float, 
+                                default=0.0,
+                                help='weight for photometric flow loss')
+        self.parser.add_argument('--consensus-depth-flow-loss-weight', 
+                                type=float, 
+                                default=0.0,
+                                help='weight for consensus depth flow loss')
+        #endregion
+
+        #region Config photometric reconstruction and photometric flow loss
+        self.parser.add_argument('--L1-photometric',
+                                type=self.str2bool, 
+                                default=True, 
+                                help='use L1 for photometric reconstruction and photometric flow loss')
+        self.parser.add_argument('--robust-L1-photometric',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use robust L1 photometric reconstruction and photometric flow loss')
+        self.parser.add_argument('--L2-photometric',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use L2 photometric reconstruction and photometric flow loss')
+        self.parser.add_argument('--ssim-photometric',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use ssim photometric reconstruction and photometric flow loss')
+
+        self.parser.add_argument('--L1-photometric-weight', 
+                                type=float, 
+                                default=0,
+                                help='L1 weight in photometric reconstruction and photometric flow loss')
+        self.parser.add_argument('--robust-L1-photometric-weight', 
+                                type=float, 
+                                default=0,
+                                help='robust-L1 weight in photometric reconstruction and photometric flow loss')
+        self.parser.add_argument('--L2-photometric-weight', 
+                                type=float, 
+                                default=0,
+                                help='L2 weight in photometric reconstruction and photometric flow loss')
+        self.parser.add_argument('--ssim-photometric-weight', 
+                                type=float, 
+                                default=0.8,
+                                help='SSIM weight in photometric reconstruction and photometric flow loss')
+
+        self.parser.add_argument('--min-photometric',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='calculate min for photometric reconstruction and photometric flow loss')
+        self.parser.add_argument('--mean-photometric',
+                                type=self.str2bool, 
+                                default=True, 
+                                help='calculate mean for photometric reconstruction and photometric flow loss')
+
+        self.parser.add_argument('--use-mask-for-photometric',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='mutiply explainability mask into photometric reconstruction and photometric flow loss')
+        #endregion
+
+        #region Config smooth loss
+        self.parser.add_argument('--use-disp-smooth',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use disp for calculate smoothness loss')
+        self.parser.add_argument('--use-depth-smooth',
+                                type=self.str2bool, 
+                                default=True, 
+                                help='use depth for calculate smoothness loss')
+        self.parser.add_argument('--use-flow-smooth',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use flow for calculate smoothness loss')
+        self.parser.add_argument('--use-mask-smooth',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use mask for calculate smoothness loss')
+
+        self.parser.add_argument('--disp-smooth-weight', 
+                                type=float, 
+                                default=1,
+                                help='disp-smooth weight in smoothness loss')
+        self.parser.add_argument('--depth-smooth-weight', 
+                                type=float, 
+                                default=1,
+                                help='depth-smooth weight in smoothness loss')
+        self.parser.add_argument('--flow-smooth-weight', 
+                                type=float, 
+                                default=1,
+                                help='flow-smooth weight in smoothness loss')
+        self.parser.add_argument('--mask-smooth-weight', 
+                                type=float, 
+                                default=1,
+                                help='mask-smooth weight in smoothness loss')
+
+        self.parser.add_argument('--use-first-derivative',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use first-order gradients for calculate smoothness loss')
+        self.parser.add_argument('--use-second-derivative',
+                                type=self.str2bool, 
+                                default=True, 
+                                help='use second-order gradients for calculate smoothness loss')
+        self.parser.add_argument('--use-L1-smooth',
+                                type=self.str2bool, 
+                                default=True, 
+                                help='use L1 for calculate smoothness loss')
+        self.parser.add_argument('--use-L2-smooth',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use L2 for calculate smoothness loss')
+        #endregion
+
+        #region Config consensus depth flow loss
+        self.parser.add_argument('--lambda-c', 
+                                type=float, 
+                                default=0.001,
+                                help='lambda_C constant')
+        #endregion
+
+        #endregion
                               
         # CONFIG DISPNET
         self.parser.add_argument('--dispnet-architecture',
@@ -105,9 +248,9 @@ class SfmLearnerConfig:
                                 default=True, 
                                 help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
 
-        # CONFIG POSE EXP NET
+        # CONFIG POSE - POSEEXP NET
+        # If poseexpnet_architecture is set, then posenet_architecture have to be None and vice versa
         self.parser.add_argument('--poseexpnet-architecture',
-                                type=str,
                                 default='PoseExpNet',
                                 help='disparity network architecture')
         self.parser.add_argument('--pretrained-exppose', 
@@ -116,14 +259,13 @@ class SfmLearnerConfig:
                                 metavar='PATH',
                                 help='path to pre-trained Exp Pose net model')
         self.parser.add_argument('--posenet-architecture',
-                                type=str,
-                                default='PoseNet',
-                                help='disparity network architecture')
+                                default=None,
+                                help='pose estimation network architecture')
         self.parser.add_argument('--pretrained-pose', 
                                 dest='pretrained_pose', 
                                 default=None, 
                                 metavar='PATH',
-                                help='path to pre-trained Exp Pose net model')
+                                help='path to pre-trained Pose net model')
         self.parser.add_argument('--with-pose', 
                                 type=self.str2bool,
                                 default=False, 

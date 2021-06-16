@@ -49,7 +49,7 @@ class SfmLearner():
             self.pose_exp_net = model_creator.create(model='poseexpnet')
             self.optimizer = optimizer_creator.create(self.disp_net, self.pose_exp_net)
         else:
-            self.args.mask_loss_weight = 0
+            self.args.mask_loss_weight = 0 # because posenet does not output explainability mask
             self.pose_net = model_creator.create(model='posenet')
             self.optimizer = optimizer_creator.create(self.disp_net, self.pose_net)
 
@@ -78,9 +78,9 @@ class SfmLearner():
             # evaluate on validation set
             self.logger.reset_valid_bar()
             if self.args.with_gt and self.args.with_pose:
-                errors, error_names = self.validate_with_gt_pose(self.args, self.val_loader, self.disp_net, self.pose_exp_net, epoch, self.logger, self.tb_writer)
+                errors, error_names = self.validate_with_gt_pose(epoch=epoch)
             elif self.args.with_gt:
-                errors, error_names = self.validate_with_gt(epoch)
+                errors, error_names = self.validate_with_gt(epoch=epoch)
 
             error_string = ', '.join('{} : {:.3f}'.format(name, error) for name, error in zip(error_names, errors))
             self.logger.valid_writer.write(' * Avg {}'.format(error_string))
@@ -123,7 +123,7 @@ class SfmLearner():
 
 
     @torch.no_grad()
-    def validate_with_gt_pose(self, args, val_loader, disp_net, pose_exp_net, epoch, logger, tb_writer, sample_nb_to_log=3):
+    def validate_with_gt_pose(self, epoch, sample_nb_to_log=3):
         global device
         batch_time = AverageMeter()
         depth_error_names = ['abs_diff', 'abs_rel', 'sq_rel', 'a1', 'a2', 'a3']
@@ -132,17 +132,17 @@ class SfmLearner():
         pose_errors = AverageMeter(i=2, precision=4)
         log_outputs = sample_nb_to_log > 0
         # Output the logs throughout the whole dataset
-        batches_to_log = list(np.linspace(0, len(val_loader), sample_nb_to_log).astype(int))
-        poses_values = np.zeros(((len(val_loader)-1) * args.batch_size * (args.sequence_length-1), 6))
-        disp_values = np.zeros(((len(val_loader)-1) * args.batch_size * 3))
+        batches_to_log = list(np.linspace(0, len(self.val_loader), sample_nb_to_log).astype(int))
+        poses_values = np.zeros(((len(self.val_loader)-1) * self.args.batch_size * (self.args.sequence_length-1), 6))
+        disp_values = np.zeros(((len(self.val_loader)-1) * self.args.batch_size * 3))
 
         # switch to evaluate mode
-        disp_net.eval()
-        pose_exp_net.eval()
+        self.disp_net.eval()
+        self.pose_exp_net.eval()
 
         end = time.time()
-        logger.valid_bar.update(0)
-        for i, (tgt_img, ref_imgs, gt_depth, gt_poses) in enumerate(val_loader):
+        self.logger.valid_bar.update(0)
+        for i, (tgt_img, ref_imgs, gt_depth, gt_poses) in enumerate(self.val_loader):
             tgt_img = tgt_img.to(device)
             gt_depth = gt_depth.to(device)
             gt_poses = gt_poses.to(device)
@@ -150,9 +150,9 @@ class SfmLearner():
             b = tgt_img.shape[0]
 
             # compute output
-            output_disp = disp_net(tgt_img)
+            output_disp = self.disp_net(tgt_img)
             output_depth = 1/output_disp
-            explainability_mask, output_poses = pose_exp_net(tgt_img, ref_imgs)
+            explainability_mask, output_poses = self.pose_exp_net(tgt_img, ref_imgs)
 
             reordered_output_poses = torch.cat([output_poses[:, :gt_poses.shape[1]//2],
                                                 torch.zeros(b, 1, 6).to(output_poses),
@@ -160,7 +160,7 @@ class SfmLearner():
 
             # pose_vec2mat only takes B, 6 tensors, so we simulate a batch dimension of B * seq_length
             unravelled_poses = reordered_output_poses.reshape(-1, 6)
-            unravelled_matrices = pose_vec2mat(unravelled_poses, rotation_mode=args.rotation_mode)
+            unravelled_matrices = pose_vec2mat(unravelled_poses, rotation_mode=self.args.rotation_mode)
             inv_transform_matrices = unravelled_matrices.reshape(b, -1, 3, 4)
 
             rot_matrices = inv_transform_matrices[..., :3].transpose(-2, -1)
@@ -177,16 +177,16 @@ class SfmLearner():
                 index = batches_to_log.index(i)
                 if epoch == 0:
                     for j, ref in enumerate(ref_imgs):
-                        tb_writer.add_image('val Input {}/{}'.format(j, index), tensor2array(tgt_img[0]), 0)
-                        tb_writer.add_image('val Input {}/{}'.format(j, index), tensor2array(ref[0]), 1)
+                        self.tb_writer.add_image('val Input {}/{}'.format(j, index), tensor2array(tgt_img[0]), 0)
+                        self.tb_writer.add_image('val Input {}/{}'.format(j, index), tensor2array(ref[0]), 1)
 
-                log_output_tensorboard(tb_writer, 'val', index, '', epoch, output_depth, output_disp, None, None, explainability_mask)
+                log_output_tensorboard(self.tb_writer, 'val', index, '', epoch, output_depth, output_disp, None, None, explainability_mask)
 
-            if log_outputs and i < len(val_loader)-1:
-                step = args.batch_size*(args.sequence_length-1)
+            if log_outputs and i < len(self.val_loader)-1:
+                step = self.args.batch_size*(self.args.sequence_length-1)
                 poses_values[i * step:(i+1) * step] = output_poses.cpu().view(-1, 6).numpy()
-                step = args.batch_size * 3
-                disp_unraveled = output_disp.cpu().view(args.batch_size, -1)
+                step = self.args.batch_size * 3
+                disp_unraveled = output_disp.cpu().view(self.args.batch_size, -1)
                 disp_values[i * step:(i+1) * step] = torch.cat([disp_unraveled.min(-1)[0],
                                                                 disp_unraveled.median(-1)[0],
                                                                 disp_unraveled.max(-1)[0]]).numpy()
@@ -197,9 +197,9 @@ class SfmLearner():
             # measure elapsed time
             batch_time.update(time.time() - end)
             end = time.time()
-            logger.valid_bar.update(i+1)
-            if i % args.print_freq == 0:
-                logger.valid_writer.write(
+            self.logger.valid_bar.update(i+1)
+            if i % self.args.print_freq == 0:
+                self.logger.valid_writer.write(
                     'valid: Time {} Abs Error {:.4f} ({:.4f}), ATE {:.4f} ({:.4f})'.format(batch_time,
                                                                                         depth_errors.val[0],
                                                                                         depth_errors.avg[0],
@@ -208,14 +208,14 @@ class SfmLearner():
         if log_outputs:
             prefix = 'valid poses'
             coeffs_names = ['tx', 'ty', 'tz']
-            if args.rotation_mode == 'euler':
+            if self.args.rotation_mode == 'euler':
                 coeffs_names.extend(['rx', 'ry', 'rz'])
-            elif args.rotation_mode == 'quat':
+            elif self.args.rotation_mode == 'quat':
                 coeffs_names.extend(['qx', 'qy', 'qz'])
             for i in range(poses_values.shape[1]):
-                tb_writer.add_histogram('{} {}'.format(prefix, coeffs_names[i]), poses_values[:, i], epoch)
-            tb_writer.add_histogram('disp_values', disp_values, epoch)
-        logger.valid_bar.update(len(val_loader))
+                self.tb_writer.add_histogram('{} {}'.format(prefix, coeffs_names[i]), poses_values[:, i], epoch)
+            self.tb_writer.add_histogram('disp_values', disp_values, epoch)
+        self.logger.valid_bar.update(len(self.val_loader))
         return depth_errors.avg + pose_errors.avg, depth_error_names + pose_error_names
 
 
