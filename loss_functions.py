@@ -70,7 +70,7 @@ def photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics,
                 diff = l2_per_pix(diff)*args.L2_photometric_weight
 
             if args.ssim_photometric:
-                ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_points
+                ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped)
                 ssim_loss = ssim_loss * args.ssim_photometric_weight
             else:
                 ssim_loss = 0

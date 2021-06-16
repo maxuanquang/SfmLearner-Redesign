@@ -1,4 +1,4 @@
-# SfMLearner Pytorch version
+# SfMLearner Pytorch Software Architecture Redesign version
 This codebase implements the system described in the paper:
 
 Unsupervised Learning of Depth and Ego-Motion from Video
@@ -26,22 +26,18 @@ pip3 install -r requirements.txt
 or install manually the following packages :
 
 ```
-pytorch >= 1.0.1
+pytorch==1.0.1
+torchvision==0.2.2
 pebble
 matplotlib
 imageio
-scipy
+scipy==1.1.0
 argparse
 tensorboardX
 blessings
 progressbar2
 path.py
 ```
-
-### Note
-Because it uses latests pytorch features, it is not compatible with anterior versions of pytorch.
-
-If you don't have an up to date pytorch, the tags can help you checkout the right commits corresponding to your pytorch version.
 
 ### What has been done
 
@@ -77,7 +73,7 @@ Notice that for Cityscapes the `img_height` is set to 171 because we crop out th
 ## Training
 Once the data are formatted following the above instructions, you should be able to train the model by running the following command
 ```bash
-python3 train.py /path/to/the/formatted/data/ -b4 -m0.2 -s0.1 --epoch-size 3000 --sequence-length 3 --log-output [--with-gt]
+python3 runner.py --train --data /path/to/the/formatted/data/ -b4 -m0.2 -s0.1 --epoch-size 3000 --sequence-length 3 --log-output [--with-gt]
 ```
 You can then start a `tensorboard` session in this folder by
 ```bash
@@ -89,13 +85,13 @@ and visualize the training progress by opening [https://localhost:6006](https://
 
 Disparity map generation can be done with `run_inference.py`
 ```bash
-python3 run_inference.py --pretrained /path/to/dispnet --dataset-dir /path/pictures/dir --output-dir /path/to/output/dir
+python3 runner.py --infer --pretrained /path/to/dispnet --dataset-dir /path/pictures/dir --output-dir /path/to/output/dir
 ```
 Will run inference on all pictures inside `dataset-dir` and save a jpg of disparity (or depth) to `output-dir` for each one see script help (`-h`) for more options.
 
 Disparity evaluation is avalaible
 ```bash
-python3 test_disp.py --pretrained-dispnet /path/to/dispnet --pretrained-posenet /path/to/posenet --dataset-dir /path/to/KITTI_raw --dataset-list /path/to/test_files_list
+python3 runner.py --test --pretrained-dispnet /path/to/dispnet --pretrained-posenet /path/to/posenet --dataset-dir /path/to/KITTI_raw --dataset-list /path/to/test_files_list
 ```
 
 Test file list is available in kitti eval folder. To get fair comparison with [Original paper evaluation code](https://github.com/tinghuiz/SfMLearner/blob/master/kitti_eval/eval_depth.py), don't specify a posenet. However, if you do,  it will be used to solve the scale factor ambiguity, the only ground truth used to get it will be vehicle speed which is far more acceptable for real conditions quality measurement, but you will obviously get worse results.
