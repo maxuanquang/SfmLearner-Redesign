@@ -339,9 +339,6 @@ class SfmLearner():
             batch_time.update(time.time() - end)
             end = time.time()
 
-            # with open(args.save_path/args.log_full, 'a') as csvfile:
-            #     writer = csv.writer(csvfile, delimiter='\t')
-            #     writer.writerow([loss.item(), loss_1.item(), loss_2.item() if w2 > 0 else 0, loss_3.item()])
             self.logger.train_bar.update(i+1)
             if i % self.args.print_freq == 0:
                 self.logger.train_writer.write('Train: Time {} Data {} Loss {}'.format(batch_time, data_time, losses))
