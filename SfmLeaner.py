@@ -55,7 +55,8 @@ class SfmLearner():
 
         self.train_loader = dataloader_creator.create(mode='train') 
         self.val_loader = dataloader_creator.create(mode='val')
-        self.loss_function = loss_creator.create()
+        self.loss_function = loss_creator.create(function='loss_function')
+        self.calculate_intermediate_results = loss_creator.create(function='calculate_intermediate_results')
 
         # objects serve for training
         self.reporter = Reporter(self.args)
@@ -316,29 +317,33 @@ class SfmLearner():
                 for _ in range(self.args.nlevels):
                     explainability_mask.append(None)
 
-            loss_dict = self.loss_function(tgt_img, ref_imgs, intrinsics,
+            losses_dict = self.loss_function(tgt_img, ref_imgs, intrinsics,
                                             depth, explainability_mask, pose,
                                             self.args.rotation_mode, self.args.padding_mode, self.args)
-            loss = loss_dict['total_loss']
+            loss = losses_dict['total_loss']
 
             if log_losses:
                 self.tb_writer.add_scalar('total_loss', loss.item(), n_iter)
                 if w1 > 0:
-                    self.tb_writer.add_scalar('photometric_reconstruction_loss', loss_dict['photometric_reconstruction_loss'].item(), n_iter)
+                    self.tb_writer.add_scalar('photometric_reconstruction_loss', losses_dict['photometric_reconstruction_loss'].item(), n_iter)
                 if w2 > 0:
-                    self.tb_writer.add_scalar('explainability_loss', loss_dict['explainability_loss'], n_iter)
+                    self.tb_writer.add_scalar('explainability_loss', losses_dict['explainability_loss'], n_iter)
                 if w3 > 0:
-                    self.tb_writer.add_scalar('smooth_loss', loss_dict['smooth_loss'], n_iter)
+                    self.tb_writer.add_scalar('smooth_loss', losses_dict['smooth_loss'], n_iter)
                 if w4 > 0:
-                    self.tb_writer.add_scalar('photometric_flow_loss', loss_dict['photometric_flow_loss'].item(), n_iter)
+                    self.tb_writer.add_scalar('photometric_flow_loss', losses_dict['photometric_flow_loss'].item(), n_iter)
                 if w5 > 0:
-                    self.tb_writer.add_scalar('consensus_depth_flow_loss', loss_dict['consensus_depth_flow_loss'].item(), n_iter)
+                    self.tb_writer.add_scalar('consensus_depth_flow_loss', losses_dict['consensus_depth_flow_loss'].item(), n_iter)
                 
-
-            # if log_output:
-            #     self.tb_writer.add_image('train Input', tensor2array(tgt_img[0]), n_iter)
-            #     for k, scaled_maps in enumerate(zip(depth, disparities, warped, diff, explainability_mask)):
-            #         log_output_tensorboard(self.tb_writer, "train", 0, " {}".format(k), n_iter, *scaled_maps)
+            if log_output:
+                results_dict = self.calculate_intermediate_results(tgt_img, ref_imgs, intrinsics,
+                                            depth, explainability_mask, pose,
+                                            self.args.rotation_mode, self.args.padding_mode, self.args)
+                warped = results_dict['photometric_reconstruction_warped']
+                diff = results_dict['photometric_reconstruction_diff']
+                self.tb_writer.add_image('train Input', tensor2array(tgt_img[0]), n_iter)
+                for k, scaled_maps in enumerate(zip(depth, disparities, warped, diff, explainability_mask)):
+                    log_output_tensorboard(self.tb_writer, "train", 0, " {}".format(k), n_iter, *scaled_maps)
 
             # record loss and EPE
             losses.update(loss.item(), self.args.batch_size)
