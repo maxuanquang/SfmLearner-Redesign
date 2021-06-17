@@ -95,7 +95,7 @@ class SfmLearner():
                 best_error = decisive_error
 
             # remember lowest error and save checkpoint
-            is_best = decisive_error < best_error
+            is_best = decisive_error <= best_error
             best_error = min(best_error, decisive_error)
             save_checkpoint(
                 self.args.save_path, {
@@ -106,10 +106,10 @@ class SfmLearner():
                     'state_dict': self.pose_exp_net.module.state_dict()
                 },
                 is_best)
-            self.reporter.update_log_summary(train_loss, decisive_error)
+            self.reporter.update_log_summary(train_loss, decisive_error, errors)
 
         self.logger.epoch_bar.finish()
-        self.reporter.create_report()
+        # self.reporter.create_report()
 
         return 0
 
