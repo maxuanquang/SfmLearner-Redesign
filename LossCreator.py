@@ -78,8 +78,7 @@ class LossCreator():
 
         def calculate_intermediate_results(tgt_img, ref_imgs, intrinsics, 
                                             depth, explainability_mask, pose,
-                                            args,
-                                            rotation_mode, padding_mode):
+                                            rotation_mode, padding_mode, args):
 
             w1 = self.args.photo_loss_weight
             w2 = self.args.mask_loss_weight
