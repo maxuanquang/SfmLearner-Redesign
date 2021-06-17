@@ -26,8 +26,7 @@ pip3 install -r requirements.txt
 or install manually the following packages :
 
 ```
-pytorch==1.0.1
-torchvision==0.2.2
+pytorch >= 1.4.0
 pebble
 matplotlib
 imageio
