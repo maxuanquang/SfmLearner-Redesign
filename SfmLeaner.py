@@ -328,7 +328,7 @@ class SfmLearner():
                 if w2 > 0:
                     self.tb_writer.add_scalar('explainability_loss', loss_dict['explainability_loss'], n_iter)
                 if w3 > 0:
-                    self.tb_writer.add_scalar('disparity_smoothness_loss', loss_dict['disparity_smoothness_loss'], n_iter)
+                    self.tb_writer.add_scalar('smooth_loss', loss_dict['smooth_loss'], n_iter)
                 if w4 > 0:
                     self.tb_writer.add_scalar('photometric_flow_loss', loss_dict['photometric_flow_loss'].item(), n_iter)
                 if w5 > 0:
