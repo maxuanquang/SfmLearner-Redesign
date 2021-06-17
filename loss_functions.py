@@ -34,8 +34,7 @@ def robust_l1_per_pix(x, q=0.5, eps=1e-2):
     x = torch.pow((x.pow(2) + eps), q)
     return x
 
-def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose,
-                            args, rotation_mode='euler', padding_mode='zeros'):
+def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose, args):
     assert(explainability_mask is None or depth.size()[2:] == explainability_mask.size()[2:])
     assert(pose.size(1) == len(ref_imgs))
 
@@ -56,15 +55,17 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
 
         ref_img_warped, valid_points = inverse_warp(ref_img, depth[:,0], current_pose,
                                                     intrinsics_scaled,
-                                                    rotation_mode, padding_mode)
+                                                    args.rotation_mode, args.padding_mode)
         diff = (tgt_img_scaled - ref_img_warped) * valid_points.unsqueeze(1).float()
 
+        diff_loss = 0
+
         if args.L1_photometric:
-            diff = l1_per_pix(diff)*args.L1_photometric_weight
-        elif args.robust_L1_photometric:
-            diff = robust_l1_per_pix(diff)*args.robust_L1_photometric_weight
-        elif args.L2_photometric:
-            diff = l2_per_pix(diff)*args.L2_photometric_weight
+            diff_loss += l1_per_pix(diff)*args.L1_photometric_weight
+        if args.robust_L1_photometric:
+            diff_loss += robust_l1_per_pix(diff)*args.robust_L1_photometric_weight
+        if args.L2_photometric:
+            diff_loss += l2_per_pix(diff)*args.L2_photometric_weight
 
         if args.ssim_photometric:
             ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped)
@@ -72,7 +73,7 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         else:
             ssim_loss = 0
 
-        current_loss = diff + ssim_loss
+        current_loss = diff_loss + ssim_loss
 
         if explainability_mask is not None:
             current_loss = current_loss * explainability_mask[:,i:i+1].expand_as(current_loss)
@@ -88,18 +89,14 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         diff_maps.append(diff[0])
     
     if args.min_photometric:
-        loss_list = torch.stack(loss_list)
-        loss_list = loss_list.min(0)[0]
-        reconstruction_loss = loss_list.mean()
+        loss_tensor = torch.stack(loss_list)
+        loss_tensor = loss_tensor.min(0)[0]
+        reconstruction_loss = loss_tensor.mean()
 
     return reconstruction_loss, warped_imgs, diff_maps
 
-def photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics,
-                                    depth, explainability_mask, pose,
-                                    args,
-                                    rotation_mode='euler', padding_mode='zeros'):
+def photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose, args):
 
-    warped_results, diff_results = [], []
     if type(explainability_mask) not in [tuple, list]:
         explainability_mask = [explainability_mask]
     if type(depth) not in [list, tuple]:
@@ -107,15 +104,11 @@ def photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics,
 
     total_loss = 0
     for d, mask in zip(depth, explainability_mask):
-        loss, _, _ = one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, d, mask, pose,
-                                                        args, rotation_mode, padding_mode)
+        loss, _, _ = one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, d, mask, pose, args)
         total_loss += loss
     return total_loss
 
-def photometric_reconstruction_results(tgt_img, ref_imgs, intrinsics,
-                                    depth, explainability_mask, pose,
-                                    args,
-                                    rotation_mode='euler', padding_mode='zeros'):
+def photometric_reconstruction_results(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose, args):
 
     warped_results, diff_results = [], []
     if type(explainability_mask) not in [tuple, list]:
@@ -124,8 +117,7 @@ def photometric_reconstruction_results(tgt_img, ref_imgs, intrinsics,
         depth = [depth]
 
     for d, mask in zip(depth, explainability_mask):
-        _, warped, diff = one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, d, mask, pose,
-                                                        args, rotation_mode, padding_mode)
+        _, warped, diff = one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, d, mask, pose, args)
         warped_results.append(warped)
         diff_results.append(diff)
     return warped_results, diff_results

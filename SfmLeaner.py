@@ -13,7 +13,7 @@ from logger import TermLogger, AverageMeter
 from ModelCreator import ModelCreator
 from DataLoaderCreator import DataLoaderCreator
 from OptimizerCreator import OptimizerCreator
-from LossCreator import LossCreator
+from SfmLearnerLoss import SfmLearnerLoss
 from Reporter import Reporter
 
 from tensorboardX import SummaryWriter
@@ -34,7 +34,6 @@ class SfmLearner():
         model_creator = ModelCreator(self.args)
         optimizer_creator = OptimizerCreator(self.args)
         dataloader_creator = DataLoaderCreator(self.args)
-        loss_creator = LossCreator(self.args)
 
         self.disp_net = model_creator.create(model='dispnet')
         if self.args.poseexpnet_architecture:
@@ -47,8 +46,7 @@ class SfmLearner():
 
         self.train_loader = dataloader_creator.create(mode='train') 
         self.val_loader = dataloader_creator.create(mode='val')
-        self.loss_function = loss_creator.create(function='loss_function')
-        self.calculate_intermediate_results = loss_creator.create(function='calculate_intermediate_results')
+        self.sfmlearner_loss = SfmLearnerLoss(self.args)
 
         # objects serve for training
         self.reporter = Reporter(self.args)
@@ -309,9 +307,7 @@ class SfmLearner():
                 for _ in range(self.args.nlevels):
                     explainability_mask.append(None)
 
-            losses_dict = self.loss_function(tgt_img, ref_imgs, intrinsics,
-                                            depth, explainability_mask, pose,
-                                            self.args.rotation_mode, self.args.padding_mode, self.args)
+            losses_dict = self.sfmlearner_loss.calculate_loss(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose)
             loss = losses_dict['total_loss']
 
             if log_losses:
@@ -328,9 +324,7 @@ class SfmLearner():
                     self.tb_writer.add_scalar('consensus_depth_flow_loss', losses_dict['consensus_depth_flow_loss'].item(), n_iter)
                 
             if log_output:
-                results_dict = self.calculate_intermediate_results(tgt_img, ref_imgs, intrinsics,
-                                            depth, explainability_mask, pose,
-                                            self.args.rotation_mode, self.args.padding_mode, self.args)
+                results_dict = self.sfmlearner_loss.calculate_intermediate_results(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose)
                 warped = results_dict['photometric_reconstruction_warped']
                 diff = results_dict['photometric_reconstruction_diff']
                 self.tb_writer.add_image('train Input', tensor2array(tgt_img[0]), n_iter)
