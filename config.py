@@ -78,26 +78,26 @@ class SfmLearnerConfig:
         #region CONFIG LOSS FUNCTION
 
         #region Config loss components
-        self.parser.add_argument('--photometric-reconstruction-loss',
-                                type=self.str2bool, 
-                                default=True, 
-                                help='use photometric reconstruction loss')
-        self.parser.add_argument('--mask-loss',
-                                type=self.str2bool, 
-                                default=True, 
-                                help='use mask loss')
-        self.parser.add_argument('--smooth-loss',
-                                type=self.str2bool, 
-                                default=True, 
-                                help='use smoothness loss')
-        self.parser.add_argument('--photometric-flow-loss',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use photometric flow loss')
-        self.parser.add_argument('--concensus-depth-flow-loss',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use consensus depth flow loss')
+        # self.parser.add_argument('--photometric-reconstruction-loss',
+        #                         type=self.str2bool, 
+        #                         default=True, 
+        #                         help='use photometric reconstruction loss')
+        # self.parser.add_argument('--mask-loss',
+        #                         type=self.str2bool, 
+        #                         default=True, 
+        #                         help='use mask loss')
+        # self.parser.add_argument('--smooth-loss',
+        #                         type=self.str2bool, 
+        #                         default=True, 
+        #                         help='use smoothness loss')
+        # self.parser.add_argument('--photometric-flow-loss',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use photometric flow loss')
+        # self.parser.add_argument('--concensus-depth-flow-loss',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use consensus depth flow loss')
 
         self.parser.add_argument('-p', '--photo-loss-weight', 
                                 type=float,
