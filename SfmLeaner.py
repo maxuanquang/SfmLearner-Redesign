@@ -53,7 +53,8 @@ class SfmLearner():
             self.pose_net = model_creator.create(model='posenet')
             self.optimizer = optimizer_creator.create(self.disp_net, self.pose_net)
 
-        self.train_loader, self.val_loader = dataloader_creator.create()
+        self.train_loader = dataloader_creator.create(mode='train') 
+        self.val_loader = dataloader_creator.create(mode='val')
         self.loss_function = loss_creator.create()
 
         # objects serve for training

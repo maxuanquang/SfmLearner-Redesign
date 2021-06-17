@@ -1,6 +1,4 @@
 import torch
-import csv
-
 
 class OptimizerCreator():
     def __init__(self, args):
@@ -8,7 +6,7 @@ class OptimizerCreator():
 
     def create(self, *networks):
         print('=> setting adam solver')
-        
+
         optim_params = []
         for item in networks:
             optim_params.append({'params': item.parameters(), 'lr': self.args.lr})
