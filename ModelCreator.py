@@ -1,4 +1,3 @@
-from operator import pos
 import models
 import torch
 import torch.backends.cudnn as cudnn

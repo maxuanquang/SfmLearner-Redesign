@@ -1,5 +1,4 @@
 from numpy.core.numeric import normalize_axis_tuple
-from path import Path
 import torch
 import custom_transforms
 

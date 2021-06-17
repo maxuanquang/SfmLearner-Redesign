@@ -1,18 +1,11 @@
-import argparse
 import time
-import csv
-from path import Path
+
 
 import numpy as np
 import torch
-import torch.backends.cudnn as cudnn
-import torch.optim
-import torch.utils.data
-import custom_transforms
-import models
+
 from utils import tensor2array, save_checkpoint, save_path_formatter, log_output_tensorboard
 
-from loss_functions import photometric_reconstruction_loss, explainability_loss, smooth_loss
 from loss_functions import compute_depth_errors, compute_pose_errors
 from inverse_warp import pose_vec2mat
 from logger import TermLogger, AverageMeter
@@ -24,7 +17,6 @@ from LossCreator import LossCreator
 from Reporter import Reporter
 
 from tensorboardX import SummaryWriter
-import glob
 
 best_error = -1
 n_iter = 0
