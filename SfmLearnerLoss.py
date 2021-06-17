@@ -23,7 +23,16 @@ class SfmLearnerLoss():
             loss_2 = 0
             
         if w3 > 0:
-            loss_3 = smooth_loss(depth)
+            loss_3 = 0
+            if self.args.use_depth_smooth:
+                loss_3 += smooth_loss(depth, self.args)*self.args.depth_smooth_weight
+            if self.args.use_disp_smooth:
+                disparities = [1/d for d in depth]
+                loss_3 += smooth_loss(disparities, self.args)*self.args.disp_smooth_weight
+            # if self.args.use_flow_smooth:
+            #     loss_3 += smooth_loss(flow)*self.args.flow_smooth_weight
+            # if self.args.use_mask_smooth:
+            #     loss_3 += smooth_loss(mask)*self.args.mask_smooth_weight
         else:
             loss_3 = 0
 

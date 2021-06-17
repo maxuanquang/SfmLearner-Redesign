@@ -133,7 +133,7 @@ def explainability_loss(mask):
     return loss
 
 
-def smooth_loss(pred_map):
+def smooth_loss(pred_map, args):
     def gradient(pred):
         D_dy = pred[:, :, 1:] - pred[:, :, :-1]
         D_dx = pred[:, :, :, 1:] - pred[:, :, :, :-1]
@@ -145,13 +145,34 @@ def smooth_loss(pred_map):
     loss = 0
     weight = 1.
 
-    for scaled_map in pred_map:
-        dx, dy = gradient(scaled_map)
-        dx2, dxdy = gradient(dx)
-        dydx, dy2 = gradient(dy)
-        loss += (dx2.abs().mean() + dxdy.abs().mean() + dydx.abs().mean() + dy2.abs().mean())*weight
-        weight /= 2.3  # don't ask me why it works better
-    return loss
+    if args.use_second_derivative and args.use_L1_smooth:
+        for scaled_map in pred_map:
+            dx, dy = gradient(scaled_map)
+            dx2, dxdy = gradient(dx)
+            dydx, dy2 = gradient(dy)
+            loss += (dx2.abs().mean() + dxdy.abs().mean() + dydx.abs().mean() + dy2.abs().mean())*weight
+            weight /= 2.3  # don't ask me why it works better
+        return loss
+    elif args.use_second_derivative and args.use_L2_smooth:
+        for scaled_map in pred_map:
+            dx, dy = gradient(scaled_map)
+            dx2, dxdy = gradient(dx)
+            dydx, dy2 = gradient(dy)
+            loss += (l2(dx2) + l2(dxdy) + l2(dydx) + l2(dy2))*weight
+            weight /= 2.3  # don't ask me why it works better
+        return loss
+    elif args.use_first_derivative and args.use_L1_smooth:
+        for scaled_map in pred_map:
+            dx, dy = gradient(scaled_map)
+            loss += (dx.abs().mean() + dy.abs().mean())*weight
+            weight /= 2.3  # don't ask me why it works better
+        return loss
+    elif args.use_first_derivative and args.use_L2_smooth:
+        for scaled_map in pred_map:
+            dx, dy = gradient(scaled_map)
+            loss += (l2(dx) + l2(dy))*weight
+            weight /= 2.3  # don't ask me why it works better
+        return loss
 
 
 def photometric_flow_loss(tgt_img, ref_imgs, flows, explainability_mask, lambda_oob=0, qch=0.5, wssim=0.5, use_occ_mask_at_scale=False):
