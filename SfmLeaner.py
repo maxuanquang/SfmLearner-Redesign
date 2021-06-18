@@ -89,16 +89,31 @@ class SfmLearner():
             # remember lowest error and save checkpoint
             is_best = decisive_error <= best_error
             best_error = min(best_error, decisive_error)
-            save_checkpoint(
-                self.args.save_path, {
-                    'epoch': epoch + 1,
-                    'state_dict': self.disp_net.module.state_dict()
-                }, {
-                    'epoch': epoch + 1,
-                    'state_dict': self.pose_exp_net.module.state_dict()
-                },
-                is_best)
-            self.reporter.update_log_summary(train_loss, decisive_error, errors)
+            if self.args.poseexpnet_architecture:
+                save_checkpoint(
+                    self.args.save_path, {
+                        'epoch': epoch + 1,
+                        'state_dict': self.disp_net.module.state_dict(),
+                        'name': "dispnet"
+                    }, {
+                        'epoch': epoch + 1,
+                        'state_dict': self.pose_exp_net.module.state_dict(),
+                        'name': "exppose"
+                    },
+                    is_best)
+            else:
+                save_checkpoint(
+                    self.args.save_path, {
+                        'epoch': epoch + 1,
+                        'state_dict': self.disp_net.module.state_dict(),
+                        'name': "dispnet"
+                    }, {
+                        'epoch': epoch + 1,
+                        'state_dict': self.pose_net.module.state_dict(),
+                        'name': "posenet"
+                    },
+                    is_best)
+
 
         self.logger.epoch_bar.finish()
         # self.reporter.create_report()
