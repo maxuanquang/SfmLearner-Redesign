@@ -278,6 +278,46 @@ class SfmLearnerConfig:
                                 help='use pose ground truth for validation, You need to store it in text files of 12 columns see data/kitti_raw_loader.py for an example, Note that for kitti, it is recommend to use odometry train set to test pose')
         #endregion
 
+        #region CONFIG FLOWNET
+        self.parser.add_argument('--flownet-architecture',
+                                default=None,
+                                help='disparity network architecture')
+        self.parser.add_argument('--pretrained-flow', 
+                                dest='pretrained_disp', 
+                                default=None, 
+                                metavar='PATH',
+                                help='path to pre-trained dispnet model')
+        self.parser.add_argument('--with-flow-gt',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
+        self.parser.add_argument('--flownet-decisive-error',
+                                type=str,
+                                choices=['epe_total', 'epe_rigid', 'epe_non_rigid', 'outliers', 'epe_total_with_gt_mask', 'epe_rigid_with_gt_mask', 'epe_non_rigid_with_gt_mask', 'outliers_gt_mask'],
+                                default='epe_non_rigid_with_gt_mask',
+                                help='decisive error for choosing best flownet model')
+        #endregion
+
+        #region CONFIG MASKNET
+        self.parser.add_argument('--masknet-architecture',
+                                default=None,
+                                help='disparity network architecture')
+        self.parser.add_argument('--pretrained-mask', 
+                                dest='pretrained_disp',
+                                default=None, 
+                                metavar='PATH',
+                                help='path to pre-trained dispnet model')
+        self.parser.add_argument('--with-mask-gt',
+                                type=self.str2bool, 
+                                default=False, 
+                                help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
+        self.parser.add_argument('--masknet-decisive-error',
+                                type=str,
+                                choices=['epe_total', 'epe_rigid', 'epe_non_rigid', 'outliers', 'epe_total_with_gt_mask', 'epe_rigid_with_gt_mask', 'epe_non_rigid_with_gt_mask', 'outliers_gt_mask'],
+                                default='outliers',
+                                help='decisive error for choosing best masknet model')
+        #endregion
+
         #region CONFIG OTHER
         self.parser.add_argument('--train',
                                 action='store_true',

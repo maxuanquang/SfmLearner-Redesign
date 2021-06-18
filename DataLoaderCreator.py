@@ -42,8 +42,7 @@ class DataLoaderCreator():
             # Data loading code
             normalize = custom_transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
         
-            valid_transform = custom_transforms.Compose([custom_transforms.ArrayToTensor()
-                , normalize])
+            valid_transform = custom_transforms.Compose([custom_transforms.ArrayToTensor(), normalize])
 
             # if no Groundtruth is avalaible, Validation set is the same type as training set to measure photometric loss from warping
             if self.args.with_gt:

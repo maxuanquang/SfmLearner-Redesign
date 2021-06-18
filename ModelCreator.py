@@ -6,7 +6,7 @@ class ModelCreator():
     def __init__(self, args):
         self.args = args
     def create(self, model='dispnet'):
-        # create disp model
+        # create disp network
         if model == 'dispnet':
             print("=> creating disparity network")
 
@@ -56,7 +56,7 @@ class ModelCreator():
 
             return pose_exp_net
 
-        # create pose model
+        # create pose network
         elif model == 'posenet':
             print("=> creating pose network")
 
@@ -76,3 +76,11 @@ class ModelCreator():
             pose_net = torch.nn.DataParallel(pose_net)
 
             return pose_net
+
+        # create mask network
+        elif model == 'masknet':
+            pass
+
+        # create flow network
+        elif model == 'flownet':
+            pass
