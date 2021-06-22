@@ -84,7 +84,8 @@ class DataLoaderCreator():
             
             dataset_dir = Path(self.args.dataset_dir)
 
-            test_files = [file.relpathto(dataset_dir) for file in sum([dataset_dir.files('*.{}'.format(ext)) for ext in self.args.img_exts], [])]
+            with open(self.args.dataset_list, 'r') as f:
+                test_files = list(f.read().splitlines())
             print('{} files to test'.format(len(test_files)))
             framework = test_framework(dataset_dir, test_files, 1,
                             self.args.min_depth, self.args.max_depth)
