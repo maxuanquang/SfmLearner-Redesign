@@ -23,11 +23,11 @@ class ModelCreator():
             elif self.args.dispnet_architecture == 'DispResNetS6':
                 disp_net = models.DispResNetS6().to(torch.device("cuda"))
 
-            if self.args.pretrained_disp:
+            if self.args.pretrained_disp and not self.args.resume:
                 print("=> using pre-trained weights for Dispnet")
                 weights = torch.load(self.args.pretrained_disp)
                 disp_net.load_state_dict(weights['state_dict'])
-            if self.args.resume:
+            elif self.args.resume:
                 print("=> resuming Dispnet from checkpoint")
                 weights = torch.load(self.args.save_path/'dispnet_checkpoint.pth.tar')
                 disp_net.load_state_dict(weights['state_dict'])

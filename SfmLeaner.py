@@ -196,8 +196,7 @@ class SfmLearner():
         self.args.max_depth = int(self.args.max_depth)
         self.disp_net.eval()
 
-        print('no PoseNet specified, scale_factor will be determined by median ratio, which is kiiinda cheating\
-            (but consistent with original paper)')
+        print('no PoseNet specified, scale_factor will be determined by median ratio, which is kiiinda cheating (but consistent with original paper)')
         self.seq_length = 1
 
         errors = np.zeros((2, 9, len(self.test_loader)), np.float32)
