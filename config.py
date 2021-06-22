@@ -354,10 +354,10 @@ class SfmLearnerConfig:
                                 type=int,
                                 metavar='N', 
                                 help='print frequency')
-        self.parser.add_argument('-e', '--evaluate', 
-                                dest='evaluate', 
-                                action='store_true',
-                                help='evaluate model on validation set')
+        # self.parser.add_argument('-e', '--evaluate', 
+        #                         dest='evaluate', 
+        #                         action='store_true',
+        #                         help='evaluate model on validation set')
         self.parser.add_argument('--seed', 
                                 default=0, 
                                 type=int, 
