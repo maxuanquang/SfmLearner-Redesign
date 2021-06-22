@@ -9,7 +9,7 @@ class Reporter():
         print('=> will save everything to {}'.format(self.args.save_path))
         self.args.save_path.makedirs_p()
 
-        if not self.args.resume and (self.args.save_path/self.args.log_summary).exists():
+        if not self.args.resume and not (self.args.save_path/self.args.log_summary).exists():
             with open(self.args.save_path/self.args.log_summary, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter='\t')
                 writer.writerow(['train_loss', 'validation_loss', 'abs_diff', 'abs_rel', 'sq_rel', 'a1', 'a2', 'a3'])
