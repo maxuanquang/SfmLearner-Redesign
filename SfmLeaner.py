@@ -131,7 +131,7 @@ class SfmLearner():
                     }, {
                         'epoch': epoch + 1,
                         'state_dict': self.optimizer.state_dict(),
-                        'name': "optmizer"
+                        'name': "optimizer"
                     },
                     is_best)
             else:

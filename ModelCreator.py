@@ -28,6 +28,7 @@ class ModelCreator():
                 weights = torch.load(self.args.pretrained_disp)
                 disp_net.load_state_dict(weights['state_dict'])
             if self.args.resume:
+                print("=> resuming Dispnet from checkpoint")
                 weights = torch.load(self.args.save_path/'dispnet_checkpoint.pth.tar')
                 disp_net.load_state_dict(weights['state_dict'])
             else:
@@ -52,6 +53,7 @@ class ModelCreator():
                 weights = torch.load(self.args.pretrained_exp_pose)
                 pose_exp_net.load_state_dict(weights['state_dict'], strict=False)
             if self.args.resume:
+                print("=> resuming Exp_pose_net from checkpoint")
                 weights = torch.load(self.args.save_path/'exp_pose_checkpoint.pth.tar')
                 pose_exp_net.load_state_dict(weights['state_dict'])
             else:
@@ -76,6 +78,7 @@ class ModelCreator():
                 weights = torch.load(self.args.pretrained_pose)
                 pose_net.load_state_dict(weights['state_dict'], strict=False)
             if self.args.resume:
+                print("=> resuming posenet from checkpoint")
                 weights = torch.load(self.args.save_path/'posenet_checkpoint.pth.tar')
                 pose_net.load_state_dict(weights['state_dict'])
             else:
