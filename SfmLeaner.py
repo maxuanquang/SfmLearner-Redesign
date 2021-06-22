@@ -200,7 +200,6 @@ class SfmLearner():
             (but consistent with original paper)')
         self.seq_length = 1
 
-        print('{} files to test'.format(len(self.test_loader)))
         errors = np.zeros((2, 9, len(self.test_loader)), np.float32)
         if self.args.output_dir is not None:
             output_dir = Path(self.args.output_dir)
