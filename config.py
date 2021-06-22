@@ -371,11 +371,18 @@ class SfmLearnerConfig:
                                 default=4, 
                                 type=int, 
                                 help='seed for random functions, and network initialization')
+        self.parser.add_argument('--checkpoint-folder', 
+                                type=str, 
+                                default='/content/drive/MyDrive/VinAI/Motion segmentation/checkpoints_sfmlearner',
+                                help='path to checkpoint folder')
         self.parser.add_argument('--name', 
                                 dest='name', 
                                 type=str, 
                                 default='demo',
-                                help='name of the experiment, checpoints are stored in checpoints/name')
+                                help='name of the experiment, checkpoints are stored in checkpoints/name')
+        self.parser.add_argument('--resume',
+                                action='store_true',
+                                help='resume from checkpoint')
         #endregion
 
     def str2bool(self, v):

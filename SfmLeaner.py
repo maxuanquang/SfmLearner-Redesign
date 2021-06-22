@@ -15,6 +15,7 @@ from DataLoaderCreator import DataLoaderCreator
 from OptimizerCreator import OptimizerCreator
 from SfmLearnerLoss import SfmLearnerLoss
 from Reporter import Reporter
+from path import Path
 
 from tensorboardX import SummaryWriter
 
@@ -25,6 +26,8 @@ device = torch.device("cuda")
 class SfmLearner():
     def __init__(self, args):
         self.args = args
+        save_path = Path(self.args.name)
+        self.args.save_path = self.args.checkpoint_folder/save_path
 
     def train(self):
         # create main objects
@@ -98,7 +101,11 @@ class SfmLearner():
                     }, {
                         'epoch': epoch + 1,
                         'state_dict': self.pose_exp_net.module.state_dict(),
-                        'name': "exppose"
+                        'name': "exp_pose"
+                    }, {
+                        'epoch': epoch + 1,
+                        'state_dict': self.optimizer.state_dict(),
+                        'name': "optmizer"
                     },
                     is_best)
             else:
@@ -111,6 +118,10 @@ class SfmLearner():
                         'epoch': epoch + 1,
                         'state_dict': self.pose_net.module.state_dict(),
                         'name': "posenet"
+                    }, {
+                        'epoch': epoch + 1,
+                        'state_dict': self.optimizer.state_dict(),
+                        'name': "optmizer"
                     },
                     is_best)
 

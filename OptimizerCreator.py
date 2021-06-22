@@ -1,4 +1,5 @@
 import torch
+from path import Path
 
 class OptimizerCreator():
     def __init__(self, args):
@@ -14,5 +15,10 @@ class OptimizerCreator():
         optimizer = torch.optim.Adam(optim_params,
                                     betas=(self.args.momentum, self.args.beta),
                                     weight_decay=self.args.weight_decay)
+
+        if self.args.resume and (self.args.save_path/'optimizer_checkpoint.pth.tar').exists():
+            print("=> loading optimizer from checkpoint")
+            optimizer_weights = torch.load(self.args.save_path/'optimizer_checkpoint.pth.tar')
+            optimizer.load_state_dict(optimizer_weights['state_dict'])
 
         return optimizer

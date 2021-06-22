@@ -5,8 +5,6 @@ class Reporter():
     def __init__(self, args) -> None:
         self.args = args
 
-        save_path = Path(self.args.name)
-        self.args.save_path = '/content/drive/MyDrive/VinAI/Motion segmentation/checkpoints_sfmlearner'/save_path #/timestamp
         print('=> will save everything to {}'.format(self.args.save_path))
         self.args.save_path.makedirs_p()
 
