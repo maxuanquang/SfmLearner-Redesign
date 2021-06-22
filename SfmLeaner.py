@@ -17,7 +17,7 @@ from OptimizerCreator import OptimizerCreator
 from SfmLearnerLoss import SfmLearnerLoss
 from Reporter import Reporter
 from path import Path
-import os
+import tqdm
 
 from tensorboardX import SummaryWriter
 
@@ -162,7 +162,102 @@ class SfmLearner():
 
         return 0
 
-    def evaluate(self):
+    @torch.no_grad()
+    def evaluate_dispnet(self):
+        def compute_errors(gt, pred):
+            thresh = np.maximum((gt / pred), (pred / gt))
+            a1 = (thresh < 1.25   ).mean()
+            a2 = (thresh < 1.25 ** 2).mean()
+            a3 = (thresh < 1.25 ** 3).mean()
+
+            rmse = (gt - pred) ** 2
+            rmse = np.sqrt(rmse.mean())
+
+            rmse_log = (np.log(gt) - np.log(pred)) ** 2
+            rmse_log = np.sqrt(rmse_log.mean())
+
+            abs_log = np.mean(np.abs(np.log(gt) - np.log(pred)))
+
+            abs_rel = np.mean(np.abs(gt - pred) / gt)
+            abs_diff = np.mean(np.abs(gt - pred))
+
+            sq_rel = np.mean(((gt - pred)**2) / gt)
+
+            return abs_diff, abs_rel, sq_rel, rmse, rmse_log, abs_log, a1, a2, a3
+        from scipy.misc import imresize
+        from scipy.ndimage.interpolation import zoom
+
+        model_creator = ModelCreator(self.args)
+        dataloader_creator = DataLoaderCreator(self.args)
+
+        self.disp_net = model_creator.create(model='dispnet')
+        self.test_loader = dataloader_creator.create(mode='test_eigen') 
+
+        self.args.max_depth = int(self.args.max_depth)
+        self.disp_net.eval()
+
+        print('no PoseNet specified, scale_factor will be determined by median ratio, which is kiiinda cheating\
+            (but consistent with original paper)')
+        self.seq_length = 1
+
+        print('{} files to test'.format(len(self.test_loader)))
+        errors = np.zeros((2, 9, len(self.test_loader)), np.float32)
+        if self.args.output_dir is not None:
+            output_dir = Path(self.args.output_dir)
+            output_dir.makedirs_p()
+
+        for j, sample in enumerate(tqdm(self.test_loader)):
+            tgt_img = sample['tgt']
+
+            ref_imgs = sample['ref']
+
+            h,w,_ = tgt_img.shape
+            if (not self.args.no_resize) and (h != self.args.img_height or w != self.args.img_width):
+                tgt_img = imresize(tgt_img, (self.args.img_height, self.args.img_width)).astype(np.float32)
+                ref_imgs = [imresize(img, (self.args.img_height, self.args.img_width)).astype(np.float32) for img in ref_imgs]
+
+            tgt_img = np.transpose(tgt_img, (2, 0, 1))
+            ref_imgs = [np.transpose(img, (2,0,1)) for img in ref_imgs]
+
+            tgt_img = torch.from_numpy(tgt_img).unsqueeze(0)
+            tgt_img = ((tgt_img/255 - 0.5)/0.5).to(self.device)
+
+            for i, img in enumerate(ref_imgs):
+                img = torch.from_numpy(img).unsqueeze(0)
+                img = ((img/255 - 0.5)/0.5).to(self.device)
+                ref_imgs[i] = img
+
+            pred_disp = self.disp_net(tgt_img).cpu().numpy()[0,0]
+
+            if self.args.output_dir is not None:
+                if j == 0:
+                    predictions = np.zeros((len(self.test_loader), *pred_disp.shape))
+                predictions[j] = 1/pred_disp
+
+            gt_depth = sample['gt_depth']
+
+            pred_depth = 1/pred_disp
+            pred_depth_zoomed = zoom(pred_depth,
+                                    (gt_depth.shape[0]/pred_depth.shape[0],
+                                    gt_depth.shape[1]/pred_depth.shape[1])
+                                    ).clip(self.args.min_depth, self.args.max_depth)
+            if sample['mask'] is not None:
+                pred_depth_zoomed = pred_depth_zoomed[sample['mask']]
+                gt_depth = gt_depth[sample['mask']]
+
+            scale_factor = np.median(gt_depth)/np.median(pred_depth_zoomed)
+            errors[1,:,j] = compute_errors(gt_depth, pred_depth_zoomed*scale_factor)
+
+        mean_errors = errors.mean(2)
+        error_names = ['abs_diff', 'abs_rel','sq_rel','rms','log_rms', 'abs_log', 'a1','a2','a3']
+
+        print("Results with scale factor determined by GT/prediction ratio (like the original paper) : ")
+        print("{:>10}, {:>10}, {:>10}, {:>10}, {:>10}, {:>10}, {:>10}, {:>10}, {:>10}".format(*error_names))
+        print("{:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}, {:10.4f}".format(*mean_errors[1]))
+
+        if self.args.output_dir is not None:
+            np.save(output_dir/'predictions.npy', predictions)
+
         return 0
 
     def infer(self):

@@ -1,6 +1,7 @@
 from numpy.core.numeric import normalize_axis_tuple
 import torch
 import custom_transforms
+from path import Path
 
 class DataLoaderCreator():
     def __init__(self, args):
@@ -74,3 +75,18 @@ class DataLoaderCreator():
                 num_workers=self.args.workers, pin_memory=True)
 
             return val_loader
+
+        elif mode == 'test_eigen':
+            if self.args.gt_type == 'KITTI':
+                from kitti_eval.depth_evaluation_utils import test_framework_KITTI as test_framework
+            elif self.args.gt_type == 'stillbox':
+                from stillbox_eval.depth_evaluation_utils import test_framework_stillbox as test_framework
+            
+            dataset_dir = Path(self.args.dataset_dir)
+
+            test_files = [file.relpathto(dataset_dir) for file in sum([dataset_dir.files('*.{}'.format(ext)) for ext in self.args.img_exts], [])]
+
+            framework = test_framework(dataset_dir, test_files, 1,
+                            self.args.min_depth, self.args.max_depth)
+
+            return framework

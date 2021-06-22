@@ -17,6 +17,7 @@ class SfmLearnerConfig:
     def __init__(self):
         self.parser = argparse.ArgumentParser(description="SfmLearner configuration")
 
+#region TRAINING
         #region CONFIG DATALOADER
         self.parser.add_argument('--data',
                                 type=str,
@@ -283,10 +284,10 @@ class SfmLearnerConfig:
                                 default=None,
                                 help='disparity network architecture')
         self.parser.add_argument('--pretrained-flow', 
-                                dest='pretrained_disp', 
+                                dest='pretrained_flow', 
                                 default=None, 
                                 metavar='PATH',
-                                help='path to pre-trained dispnet model')
+                                help='path to pre-trained flownet model')
         self.parser.add_argument('--with-flow-gt',
                                 type=self.str2bool, 
                                 default=False, 
@@ -395,6 +396,26 @@ class SfmLearnerConfig:
                                 action='store_true',
                                 help='resume from checkpoint')
         #endregion
+#endregion
+
+#region EVALUATING
+        # self.parser.add_argument("--pretrained-dispnet", required=True, type=str, help="pretrained DispNet path")
+        # self.parser.add_argument("--pretrained-posenet", default=None, type=str, help="pretrained PoseNet path (for scale factor)")
+        self.parser.add_argument("--img-height", default=128, type=int, help="Image height")
+        self.parser.add_argument("--img-width", default=416, type=int, help="Image width")
+        self.parser.add_argument("--no-resize", action='store_true', help="no resizing is done")
+        self.parser.add_argument("--min-depth", default=1e-3)
+        self.parser.add_argument("--max-depth", default=80)
+
+        self.parser.add_argument("--dataset-dir", default='/content/eigen_test_split', type=str, help="Dataset directory")
+        self.parser.add_argument("--dataset-list", default=None, type=str, help="Dataset list file")
+        self.parser.add_argument("--output-dir", default=None, type=str, help="Output directory for saving predictions in a big 3D numpy file")
+
+        self.parser.add_argument("--gt-type", default='KITTI', type=str, help="GroundTruth data type", choices=['npy', 'png', 'KITTI', 'stillbox'])
+        self.parser.add_argument("--gps", '-g', action='store_true',
+                            help='if selected, will get displacement from GPS for KITTI. Otherwise, will integrate speed')
+        self.parser.add_argument("--img-exts", default=['png', 'jpg', 'bmp'], nargs='*', type=str, help="images extensions to glob")
+#endregion
 
     def str2bool(self, v):
         if isinstance(v, bool):
