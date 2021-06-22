@@ -3,6 +3,7 @@ import time
 
 import numpy as np
 import torch
+from torch._C import set_flush_denormal
 
 from utils import tensor2array, save_checkpoint, save_path_formatter, log_output_tensorboard
 
@@ -124,6 +125,7 @@ class SfmLearner():
                         'name': "optmizer"
                     },
                     is_best)
+            self.reporter.update_log_summary(train_loss, decisive_error, errors)
 
 
         self.logger.epoch_bar.finish()
