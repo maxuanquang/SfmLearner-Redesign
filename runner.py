@@ -12,7 +12,9 @@ if __name__ == "__main__":
     sfmlearner = SfmLearner(args)
     if args.train:
         sfmlearner.train()
-    elif args.evaluate:
-        sfmlearner.evaluate()
+    elif args.eval_dispnet:
+        sfmlearner.evaluate_dispnet()
+    elif args.eval_posenet:
+        pass
     elif args.infer:
         sfmlearner.infer()
