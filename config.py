@@ -19,7 +19,7 @@ class SfmLearnerConfig:
 
 #region TRAINING
         #region CONFIG DATALOADER
-        self.parser.add_argument('--data',
+        self.parser.add_argument('--dataset-train',
                                 type=str,
                                 default='/content/resulting_formatted_data_full_sfmlearner_pytorch',
                                 help='path to dataset')
