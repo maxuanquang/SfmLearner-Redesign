@@ -407,7 +407,7 @@ class SfmLearnerConfig:
         self.parser.add_argument("--min-depth", default=1e-3)
         self.parser.add_argument("--max-depth", default=80)
 
-        self.parser.add_argument("--dataset-dir", default='/content/eigen_test_split', type=str, help="Dataset directory")
+        self.parser.add_argument("--dataset-dir", default='/content/eigen_test_split', type=str, help="Path to test dataset")
         self.parser.add_argument("--dataset-list", default=None, type=str, help="Dataset list file")
         self.parser.add_argument("--output-dir", default=None, type=str, help="Output directory for saving predictions in a big 3D numpy file")
 
