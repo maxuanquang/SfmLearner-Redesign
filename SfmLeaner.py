@@ -17,12 +17,10 @@ from OptimizerCreator import OptimizerCreator
 from SfmLearnerLoss import SfmLearnerLoss
 from Reporter import Reporter
 from path import Path
+import os
 
 from tensorboardX import SummaryWriter
 
-best_error = -1
-n_iter = 0
-device = torch.device("cuda")
 
 class SfmLearner():
     def __init__(self, args):
@@ -30,9 +28,36 @@ class SfmLearner():
         save_path = Path(self.args.name)
         self.args.save_path = self.args.checkpoint_folder/save_path
 
+        self.best_error = -1
+        self.n_iter = 0 
+        self.start_epoch = 0
+        self.device = torch.device("cuda")
+
+        if self.args.resume:
+            # read n_iter
+            with open(self.args.save_path/'n_iter.txt','r') as f:
+                self.n_iter = int(f.readline())
+
+            # read start_epoch
+            with open(self.args.save_path/'start_epoch.txt','r') as f:
+                self.start_epoch = int(f.readline())
+
+            # read best_error
+            with open(args.save_path/args.log_summary, 'r') as f:
+                content = f.readlines()
+            content = content[1:]
+            if len(content) == 0:
+                pass
+            else:
+                val_errors = []
+                for line in content:
+                    val = line.split('\t')[1]
+                    val_errors.append(val)
+                val_errors = np.asarray(val_errors,dtype=np.float)
+                self.best_error = np.min(val_errors)
+
     def train(self):
         # create main objects
-        global best_error, n_iter, device
         torch.manual_seed(self.args.seed)
 
         model_creator = ModelCreator(self.args)
@@ -60,10 +85,10 @@ class SfmLearner():
             self.args.epoch_size = len(self.train_loader)
         train_size=min(len(self.train_loader), self.args.epoch_size)
 
-        self.logger = TermLogger(n_epochs=self.args.epochs, train_size=train_size, valid_size=len(self.val_loader))
+        self.logger = TermLogger(n_epochs=self.start_epoch+self.args.epochs, train_size=train_size, valid_size=len(self.val_loader))
         self.logger.epoch_bar.start()
 
-        for epoch in range(self.args.epochs):
+        for epoch in range(self.start_epoch, self.start_epoch+self.args.epochs):
             self.logger.epoch_bar.update(epoch)
 
             # train for one epoch
@@ -87,12 +112,12 @@ class SfmLearner():
             # Decisive error to measure your model's performance specified in config
             index = error_names.index(self.args.dispnet_decisive_error)
             decisive_error = errors[index]
-            if best_error < 0:
-                best_error = decisive_error
+            if self.best_error < 0:
+                self.best_error = decisive_error
 
             # remember lowest error and save checkpoint
-            is_best = decisive_error <= best_error
-            best_error = min(best_error, decisive_error)
+            is_best = decisive_error <= self.best_error
+            self.best_error = min(self.best_error, decisive_error)
             if self.args.poseexpnet_architecture:
                 save_checkpoint(
                     self.args.save_path, {
@@ -126,6 +151,10 @@ class SfmLearner():
                     },
                     is_best)
             self.reporter.update_log_summary(train_loss, decisive_error, errors)
+            with open(self.args.save_path/'n_iter.txt','w') as f:
+                f.write(str(self.n_iter))
+            with open(self.args.save_path/'start_epoch.txt','w') as f:
+                f.write(str(epoch+1))
 
 
         self.logger.epoch_bar.finish()
@@ -145,7 +174,6 @@ class SfmLearner():
 
     @torch.no_grad()
     def validate_with_gt_pose(self, epoch, sample_nb_to_log=3):
-        global device
         batch_time = AverageMeter()
         depth_error_names = ['abs_diff', 'abs_rel', 'sq_rel', 'a1', 'a2', 'a3']
         depth_errors = AverageMeter(i=len(depth_error_names), precision=4)
@@ -164,10 +192,10 @@ class SfmLearner():
         end = time.time()
         self.logger.valid_bar.update(0)
         for i, (tgt_img, ref_imgs, gt_depth, gt_poses) in enumerate(self.val_loader):
-            tgt_img = tgt_img.to(device)
-            gt_depth = gt_depth.to(device)
-            gt_poses = gt_poses.to(device)
-            ref_imgs = [img.to(device) for img in ref_imgs]
+            tgt_img = tgt_img.to(self.device)
+            gt_depth = gt_depth.to(self.device)
+            gt_poses = gt_poses.to(self.device)
+            ref_imgs = [img.to(self.device) for img in ref_imgs]
             b = tgt_img.shape[0]
 
             # compute output
@@ -242,7 +270,6 @@ class SfmLearner():
 
     @torch.no_grad()
     def validate_with_gt(self, epoch, sample_nb_to_log=3):
-        global device
         batch_time = AverageMeter()
         error_names = ['abs_diff', 'abs_rel', 'sq_rel', 'a1', 'a2', 'a3']
         errors = AverageMeter(i=len(error_names))
@@ -256,8 +283,8 @@ class SfmLearner():
         end = time.time()
         self.logger.valid_bar.update(0)
         for i, (tgt_img, depth) in enumerate(self.val_loader):
-            tgt_img = tgt_img.to(device)
-            depth = depth.to(device)
+            tgt_img = tgt_img.to(self.device)
+            depth = depth.to(self.device)
 
             # compute output
             output_disp = self.disp_net(tgt_img)
@@ -296,7 +323,6 @@ class SfmLearner():
 
 
     def train_one_epoch(self):
-        global n_iter, device
         batch_time = AverageMeter()
         data_time = AverageMeter()
         losses = AverageMeter(precision=4)
@@ -315,14 +341,14 @@ class SfmLearner():
         self.logger.train_bar.update(0)
 
         for i, (tgt_img, ref_imgs, intrinsics, intrinsics_inv) in enumerate(self.train_loader):
-            log_losses = i > 0 and n_iter % self.args.print_freq == 0
-            log_output = self.args.training_output_freq > 0 and n_iter % self.args.training_output_freq == 0
+            log_losses = i > 0 and self.n_iter % self.args.print_freq == 0
+            log_output = self.args.training_output_freq > 0 and self.n_iter % self.args.training_output_freq == 0
 
             # measure data loading time
             data_time.update(time.time() - end)
-            tgt_img = tgt_img.to(device)
-            ref_imgs = [img.to(device) for img in ref_imgs]
-            intrinsics = intrinsics.to(device)
+            tgt_img = tgt_img.to(self.device)
+            ref_imgs = [img.to(self.device) for img in ref_imgs]
+            intrinsics = intrinsics.to(self.device)
 
             # compute output
             disparities = self.disp_net(tgt_img)
@@ -339,25 +365,25 @@ class SfmLearner():
             loss = losses_dict['total_loss']
 
             if log_losses:
-                self.tb_writer.add_scalar('total_loss', loss.item(), n_iter)
+                self.tb_writer.add_scalar('total_loss', loss.item(), self.n_iter)
                 if w1 > 0:
-                    self.tb_writer.add_scalar('photometric_reconstruction_loss', losses_dict['photometric_reconstruction_loss'].item(), n_iter)
+                    self.tb_writer.add_scalar('photometric_reconstruction_loss', losses_dict['photometric_reconstruction_loss'].item(), self.n_iter)
                 if w2 > 0:
-                    self.tb_writer.add_scalar('explainability_loss', losses_dict['explainability_loss'], n_iter)
+                    self.tb_writer.add_scalar('explainability_loss', losses_dict['explainability_loss'], self.n_iter)
                 if w3 > 0:
-                    self.tb_writer.add_scalar('smooth_loss', losses_dict['smooth_loss'], n_iter)
+                    self.tb_writer.add_scalar('smooth_loss', losses_dict['smooth_loss'], self.n_iter)
                 if w4 > 0:
-                    self.tb_writer.add_scalar('photometric_flow_loss', losses_dict['photometric_flow_loss'].item(), n_iter)
+                    self.tb_writer.add_scalar('photometric_flow_loss', losses_dict['photometric_flow_loss'].item(), self.n_iter)
                 if w5 > 0:
-                    self.tb_writer.add_scalar('consensus_depth_flow_loss', losses_dict['consensus_depth_flow_loss'].item(), n_iter)
+                    self.tb_writer.add_scalar('consensus_depth_flow_loss', losses_dict['consensus_depth_flow_loss'].item(), self.n_iter)
                 
             if log_output:
                 results_dict = self.sfmlearner_loss.calculate_intermediate_results(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose)
                 warped = results_dict['photometric_reconstruction_warped']
                 diff = results_dict['photometric_reconstruction_diff']
-                self.tb_writer.add_image('train Input', tensor2array(tgt_img[0]), n_iter)
+                self.tb_writer.add_image('train Input', tensor2array(tgt_img[0]), self.n_iter)
                 for k, scaled_maps in enumerate(zip(depth, disparities, warped, diff, explainability_mask)):
-                    log_output_tensorboard(self.tb_writer, "train", 0, " {}".format(k), n_iter, *scaled_maps)
+                    log_output_tensorboard(self.tb_writer, "train", 0, " {}".format(k), self.n_iter, *scaled_maps)
 
             # record loss and EPE
             losses.update(loss.item(), self.args.batch_size)
@@ -377,6 +403,6 @@ class SfmLearner():
             if i >= self.args.epoch_size - 1:
                 break
 
-            n_iter += 1
+            self.n_iter += 1
 
         return losses.avg[0]
