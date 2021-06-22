@@ -259,8 +259,8 @@ class SfmLearnerConfig:
         self.parser.add_argument('--poseexpnet-architecture',
                                 default='PoseExpNet',
                                 help='disparity network architecture')
-        self.parser.add_argument('--pretrained-exppose', 
-                                dest='pretrained_exp_pose', 
+        self.parser.add_argument('--pretrained-poseexp', 
+                                dest='pretrained_pose_exp', 
                                 default=None, 
                                 metavar='PATH',
                                 help='path to pre-trained Exp Pose net model')
@@ -328,6 +328,17 @@ class SfmLearnerConfig:
         self.parser.add_argument('--infer',
                                 action='store_true',
                                 help='model inference')
+
+        self.parser.add_argument('--dispnet',
+                                action='store_true',
+                                help='evaluate dispnet performance on benchmarks')
+        self.parser.add_argument('--dispnet',
+                                action='store_true',
+                                help='evaluate dispnet performance on benchmarks')
+        self.parser.add_argument('--dispnet',
+                                action='store_true',
+                                help='evaluate dispnet performance on benchmarks')
+
         self.parser.add_argument('--epochs', 
                                 default=2, 
                                 type=int, 

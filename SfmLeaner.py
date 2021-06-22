@@ -127,7 +127,7 @@ class SfmLearner():
                     }, {
                         'epoch': epoch + 1,
                         'state_dict': self.pose_exp_net.module.state_dict(),
-                        'name': "exp_pose"
+                        'name': "pose_exp"
                     }, {
                         'epoch': epoch + 1,
                         'state_dict': self.optimizer.state_dict(),
