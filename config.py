@@ -322,9 +322,9 @@ class SfmLearnerConfig:
         self.parser.add_argument('--train',
                                 action='store_true',
                                 help='train model')
-        self.parser.add_argument('--test',
+        self.parser.add_argument('--evaluate',
                                 action='store_true',
-                                help='test model on benchmarks')
+                                help='evaluate model performance on benchmarks')
         self.parser.add_argument('--infer',
                                 action='store_true',
                                 help='model inference')

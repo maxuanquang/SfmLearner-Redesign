@@ -162,7 +162,7 @@ class SfmLearner():
 
         return 0
 
-    def test(self):
+    def evaluate(self):
         return 0
 
     def infer(self):
