@@ -329,15 +329,15 @@ class SfmLearnerConfig:
                                 action='store_true',
                                 help='model inference')
 
-        self.parser.add_argument('--dispnet',
+        self.parser.add_argument('--eval-dispnet',
                                 action='store_true',
                                 help='evaluate dispnet performance on benchmarks')
-        self.parser.add_argument('--dispnet',
+        self.parser.add_argument('--eval-poseexpnet',
                                 action='store_true',
-                                help='evaluate dispnet performance on benchmarks')
-        self.parser.add_argument('--dispnet',
+                                help='evaluate pose_exp_net performance on benchmarks')
+        self.parser.add_argument('--eval-posenet',
                                 action='store_true',
-                                help='evaluate dispnet performance on benchmarks')
+                                help='evaluate posenet performance on benchmarks')
 
         self.parser.add_argument('--epochs', 
                                 default=2, 
