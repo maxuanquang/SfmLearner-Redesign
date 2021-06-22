@@ -17,7 +17,7 @@ from OptimizerCreator import OptimizerCreator
 from SfmLearnerLoss import SfmLearnerLoss
 from Reporter import Reporter
 from path import Path
-import tqdm
+from tqdm import tqdm
 
 from tensorboardX import SummaryWriter
 
