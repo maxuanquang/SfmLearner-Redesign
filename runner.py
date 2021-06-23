@@ -14,7 +14,7 @@ if __name__ == "__main__":
         sfmlearner.train()
     elif args.eval_dispnet:
         sfmlearner.evaluate_dispnet()
-    elif args.eval_posenet:
+    elif args.eval_posenet or args.eval_poseexpnet:
         sfmlearner.evaluate_posenet()
     elif args.infer:
         sfmlearner.infer()
