@@ -110,7 +110,7 @@ and visualize the training progress by opening [https://localhost:6006](https://
 Disparity evaluation is avalaible
 ```bash
 python runner.py --eval-dispnet \
---dispnet-architecture PoseExpNet \
+--dispnet-architecture DispNetS \
 --pretrained-dispnet /path/to/dispnet \
 --dataset-dir /path/to/KITTI_raw \
 --dataset-list /path/to/test_files_list
