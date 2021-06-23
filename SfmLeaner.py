@@ -18,6 +18,8 @@ from SfmLearnerLoss import SfmLearnerLoss
 from Reporter import Reporter
 from path import Path
 from tqdm import tqdm
+from imageio import imread, imsave
+from skimage.transform import resize
 
 from tensorboardX import SummaryWriter
 
@@ -259,6 +261,48 @@ class SfmLearner():
         return 0
 
     def infer(self):
+        if not(self.args.output_disp or self.args.output_depth):
+            print('You must at least output disp value or depth value of image !')
+            return
+
+        model_creator = ModelCreator(self.args)
+        dataloader_creator = DataLoaderCreator(self.args)
+
+        self.disp_net = model_creator.create(model='dispnet')
+        self.inference_loader = dataloader_creator.create(mode='inference')
+
+        output_dir = Path(self.args.output_dir)
+        output_dir.makedirs_p()
+
+        print('{} files to test'.format(len(self.inference_loader)))
+
+        for file in tqdm(self.inference_loader):
+
+            img = imread(file)
+
+            h,w,_ = img.shape
+            if (not self.args.no_resize) and (h != self.args.img_height or w != self.args.img_width):
+                img = resize(img, (self.args.img_height, self.args.img_width))
+            img = np.transpose(img, (2, 0, 1))
+
+            tensor_img = torch.from_numpy(img.astype(np.float32)).unsqueeze(0)
+            tensor_img = ((tensor_img/255 - 0.5)/0.5).to(self.device)
+
+            output = self.disp_net(tensor_img)[0]
+
+            file_path, file_ext = file.relpath(self.args.dataset_dir).splitext()
+            print(file_path)
+            print(file_path.splitall())
+            file_name = '-'.join(file_path.splitall()[1:])
+            print(file_name)
+
+            if self.args.output_disp:
+                disp = (255*tensor2array(output, max_value=None, colormap='bone')).astype(np.uint8)
+                imsave(output_dir/'{}_disp{}'.format(file_name, file_ext), np.transpose(disp, (1,2,0)))
+            if self.args.output_depth:
+                depth = 1/output
+                depth = (255*tensor2array(depth, max_value=10, colormap='rainbow')).astype(np.uint8)
+                imsave(output_dir/'{}_depth{}'.format(file_name, file_ext), np.transpose(depth, (1,2,0)))
         return 0
 
     def prepare_dataset(self):

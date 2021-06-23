@@ -398,9 +398,7 @@ class SfmLearnerConfig:
         #endregion
 #endregion
 
-#region EVALUATING
-        # self.parser.add_argument("--pretrained-dispnet", required=True, type=str, help="pretrained DispNet path")
-        # self.parser.add_argument("--pretrained-posenet", default=None, type=str, help="pretrained PoseNet path (for scale factor)")
+#region EVALUATING & INFERENCING
         self.parser.add_argument("--img-height", default=128, type=int, help="Image height")
         self.parser.add_argument("--img-width", default=416, type=int, help="Image width")
         self.parser.add_argument("--no-resize", action='store_true', help="no resizing is done")
@@ -415,6 +413,9 @@ class SfmLearnerConfig:
         self.parser.add_argument("--gps", '-g', action='store_true',
                             help='if selected, will get displacement from GPS for KITTI. Otherwise, will integrate speed')
         self.parser.add_argument("--img-exts", default=['png', 'jpg', 'bmp'], nargs='*', type=str, help="images extensions to glob")
+
+        self.parser.add_argument("--output-disp", action='store_true', help="save disparity img")
+        self.parser.add_argument("--output-depth", action='store_true', help="save depth img")
 #endregion
 
     def str2bool(self, v):

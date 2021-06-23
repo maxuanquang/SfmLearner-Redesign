@@ -84,10 +84,23 @@ class DataLoaderCreator():
             
             dataset_dir = Path(self.args.dataset_dir)
 
-            with open(self.args.dataset_list, 'r') as f:
-                test_files = list(f.read().splitlines())
+            if self.args.dataset_list is not None:
+                with open(self.args.dataset_list, 'r') as f:
+                    test_files = list(f.read().splitlines())
+            else:
+                test_files = [file.relpathto(dataset_dir) for file in sum([dataset_dir.files('*.{}'.format(ext)) for ext in self.args.img_exts], [])]
+
             print('{} files to test'.format(len(test_files)))
             framework = test_framework(dataset_dir, test_files, 1,
                             self.args.min_depth, self.args.max_depth)
 
             return framework
+
+        elif mode == 'inference':
+            if self.args.dataset_list is not None:
+                with open(self.args.dataset_list, 'r') as f:
+                    test_files = [self.args.dataset_dir/file for file in f.read().splitlines()]
+            else:
+                test_files = sum([list(self.args.dataset_dir.walkfiles('*.{}'.format(ext))) for ext in self.args.img_exts], [])
+
+            return test_files
