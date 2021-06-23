@@ -239,8 +239,8 @@ class SfmLearnerConfig:
                                 type=str,
                                 default='DispNetS',
                                 help='disparity network architecture')
-        self.parser.add_argument('--pretrained-disp', 
-                                dest='pretrained_disp', 
+        self.parser.add_argument('--pretrained-dispnet', 
+                                dest='pretrained_dispnet', 
                                 default=None, 
                                 metavar='PATH',
                                 help='path to pre-trained dispnet model')
@@ -257,19 +257,20 @@ class SfmLearnerConfig:
 
         #region CONFIG POSE - POSEEXP NET
         # If poseexpnet_architecture is set, then posenet_architecture have to be None and vice versa
-        self.parser.add_argument('--poseexpnet-architecture',
-                                default='PoseExpNet',
-                                help='disparity network architecture')
-        self.parser.add_argument('--pretrained-poseexp', 
-                                dest='pretrained_pose_exp', 
-                                default=None, 
-                                metavar='PATH',
-                                help='path to pre-trained Exp Pose net model')
+        # self.parser.add_argument('--poseexpnet-architecture',
+        #                         default='PoseExpNet',
+        #                         help='disparity network architecture')
+        # self.parser.add_argument('--pretrained-poseexp', 
+        #                         dest='pretrained_pose_exp', 
+        #                         default=None, 
+        #                         metavar='PATH',
+        #                         help='path to pre-trained Exp Pose net model')
         self.parser.add_argument('--posenet-architecture',
-                                default=None,
+                                default='PoseExpNet',
+                                choices=['PoseExpNet', 'PoseNet6', 'PoseNetB6']
                                 help='pose estimation network architecture')
-        self.parser.add_argument('--pretrained-pose', 
-                                dest='pretrained_pose', 
+        self.parser.add_argument('--pretrained-posenet', 
+                                dest='pretrained_posenet', 
                                 default=None, 
                                 metavar='PATH',
                                 help='path to pre-trained Pose net model')
@@ -283,7 +284,7 @@ class SfmLearnerConfig:
         self.parser.add_argument('--flownet-architecture',
                                 default=None,
                                 help='disparity network architecture')
-        self.parser.add_argument('--pretrained-flow', 
+        self.parser.add_argument('--pretrained-flownet', 
                                 dest='pretrained_flow', 
                                 default=None, 
                                 metavar='PATH',
@@ -303,7 +304,7 @@ class SfmLearnerConfig:
         self.parser.add_argument('--masknet-architecture',
                                 default=None,
                                 help='disparity network architecture')
-        self.parser.add_argument('--pretrained-mask', 
+        self.parser.add_argument('--pretrained-masknet', 
                                 dest='pretrained_disp',
                                 default=None, 
                                 metavar='PATH',

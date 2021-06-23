@@ -23,9 +23,9 @@ class ModelCreator():
             elif self.args.dispnet_architecture == 'DispResNetS6':
                 disp_net = models.DispResNetS6().to(torch.device("cuda"))
 
-            if self.args.pretrained_disp and not self.args.resume:
+            if self.args.pretrained_dispnet and not self.args.resume:
                 print("=> using pre-trained weights for Dispnet")
-                weights = torch.load(self.args.pretrained_disp)
+                weights = torch.load(self.args.pretrained_dispnet)
                 disp_net.load_state_dict(weights['state_dict'])
             elif self.args.resume:
                 print("=> resuming Dispnet from checkpoint")
@@ -73,9 +73,9 @@ class ModelCreator():
             elif self.args.posenet_architecture == 'PoseNetB6':
                 pose_net = models.PoseNetB6(nb_ref_imgs=self.args.sequence_length - 1).to(torch.device("cuda"))
 
-            if self.args.pretrained_pose and not self.args.resume:
+            if self.args.pretrained_posenet and not self.args.resume:
                 print("=> using pre-trained weights for explainabilty and pose net")
-                weights = torch.load(self.args.pretrained_pose)
+                weights = torch.load(self.args.pretrained_posenet)
                 pose_net.load_state_dict(weights['state_dict'], strict=False)
             elif self.args.resume:
                 print("=> resuming posenet from checkpoint")
