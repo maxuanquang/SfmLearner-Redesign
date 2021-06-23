@@ -32,6 +32,7 @@ class ModelCreator():
                 weights = torch.load(self.args.save_path/'dispnet_checkpoint.pth.tar')
                 disp_net.load_state_dict(weights['state_dict'])
             else:
+                print("=> intializing Dispnet weights")
                 disp_net.init_weights()
 
             cudnn.benchmark = True
@@ -57,6 +58,7 @@ class ModelCreator():
                 weights = torch.load(self.args.save_path/'pose_exp_checkpoint.pth.tar')
                 pose_exp_net.load_state_dict(weights['state_dict'])
             else:
+                print('=> initializing Pose-exp-net weights')
                 pose_exp_net.init_weights()
 
             cudnn.benchmark = True
@@ -82,6 +84,7 @@ class ModelCreator():
                 weights = torch.load(self.args.save_path/'posenet_checkpoint.pth.tar')
                 pose_net.load_state_dict(weights['state_dict'])
             else:
+                print('=> initializing Posenet weights')
                 pose_net.init_weights()
 
             cudnn.benchmark = True
