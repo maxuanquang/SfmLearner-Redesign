@@ -22,9 +22,9 @@ class DataLoaderCreator():
                                             std=[0.5, 0.5, 0.5])
             ])
 
-            print("=> fetching scenes in '{}'".format(self.args.dataset_train))
+            print("=> fetching scenes in '{}'".format(self.args.dataset_dir))
             train_set = SequenceFolder(
-                self.args.dataset_train,
+                self.args.dataset_dir,
                 transform=train_transform,
                 seed=self.args.seed,
                 train=True,
@@ -50,18 +50,18 @@ class DataLoaderCreator():
                 if self.args.with_pose:
                     from datasets.validation_folders import ValidationSetWithPose
                     val_set = ValidationSetWithPose(
-                        self.args.dataset_train,
+                        self.args.dataset_dir,
                         sequence_length=self.args.sequence_length,
                         transform=valid_transform)
                 else:
                     from datasets.validation_folders import ValidationSet
                     val_set = ValidationSet(
-                        self.args.dataset_train,
+                        self.args.dataset_dir,
                         transform=valid_transform
                     )
             else:
                 val_set = SequenceFolder(
-                    self.args.dataset_train,
+                    self.args.dataset_dir,
                     transform=valid_transform,
                     seed=self.args.seed,
                     train=False,

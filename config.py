@@ -19,10 +19,10 @@ class SfmLearnerConfig:
 
 #region TRAINING
         #region CONFIG DATALOADER
-        self.parser.add_argument('--dataset-train',
+        self.parser.add_argument('--dataset-dir',
                                 type=str,
                                 default='/content/resulting_formatted_data_full_sfmlearner_pytorch',
-                                help='path to dataset')
+                                help='path to train/test/infer dataset')
         self.parser.add_argument('--dataset-format', 
                                 type=str,
                                 default='sequential',
@@ -405,7 +405,7 @@ class SfmLearnerConfig:
         self.parser.add_argument("--min-depth", default=1e-3)
         self.parser.add_argument("--max-depth", default=80)
 
-        self.parser.add_argument("--dataset-dir", default='/content/eigen_test_split', type=str, help="Path to test dataset")
+        # self.parser.add_argument("--dataset-dir", default='/content/eigen_test_split', type=str, help="Path to test dataset")
         self.parser.add_argument("--dataset-list", default=None, type=str, help="Dataset list file")
         self.parser.add_argument("--output-dir", default=None, type=str, help="Output directory for saving predictions in a big 3D numpy file")
 
