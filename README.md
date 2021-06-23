@@ -136,6 +136,7 @@ While **ATE** is often said to be enough to trajectory estimation, **RE** seems 
 Disparity map (or depth map) generation can be done with `runner.py`
 ```bash
 python runner.py --infer \
+--dispnet-architecture DispNetS \
 --pretrained-dispnet /path/to/dispnet \
 --dataset-dir /path/to/pictures/dir \
 --output-dir /path/to/output/dir \
