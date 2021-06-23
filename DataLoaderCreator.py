@@ -97,10 +97,12 @@ class DataLoaderCreator():
             return framework
 
         elif mode == 'inference':
+            dataset_dir = Path(self.args.dataset_dir)
+
             if self.args.dataset_list is not None:
                 with open(self.args.dataset_list, 'r') as f:
-                    test_files = [self.args.dataset_dir/file for file in f.read().splitlines()]
+                    test_files = [dataset_dir/file for file in f.read().splitlines()]
             else:
-                test_files = sum([list(self.args.dataset_dir.walkfiles('*.{}'.format(ext))) for ext in self.args.img_exts], [])
+                test_files = sum([list(dataset_dir.walkfiles('*.{}'.format(ext))) for ext in self.args.img_exts], [])
 
             return test_files
