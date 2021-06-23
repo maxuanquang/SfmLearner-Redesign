@@ -20,6 +20,8 @@ from path import Path
 from tqdm import tqdm
 from imageio import imread, imsave
 from skimage.transform import resize
+from scipy.misc import imresize
+from scipy.ndimage.interpolation import zoom
 
 from tensorboardX import SummaryWriter
 
@@ -186,8 +188,6 @@ class SfmLearner():
             sq_rel = np.mean(((gt - pred)**2) / gt)
 
             return abs_diff, abs_rel, sq_rel, rmse, rmse_log, abs_log, a1, a2, a3
-        from scipy.misc import imresize
-        from scipy.ndimage.interpolation import zoom
 
         model_creator = ModelCreator(self.args)
         dataloader_creator = DataLoaderCreator(self.args)
@@ -260,6 +260,101 @@ class SfmLearner():
 
         return 0
 
+    @torch.no_grad()
+    def evaluate_posenet(self):
+        def compute_pose_error(gt, pred):
+            RE = 0
+            snippet_length = gt.shape[0]
+            scale_factor = np.sum(gt[:,:,-1] * pred[:,:,-1])/np.sum(pred[:,:,-1] ** 2)
+            ATE = np.linalg.norm((gt[:,:,-1] - scale_factor * pred[:,:,-1]).reshape(-1))
+            for gt_pose, pred_pose in zip(gt, pred):
+                # Residual matrix to which we compute angle's sin and cos
+                R = gt_pose[:,:3] @ np.linalg.inv(pred_pose[:,:3])
+                s = np.linalg.norm([R[0,1]-R[1,0],
+                                    R[1,2]-R[2,1],
+                                    R[0,2]-R[2,0]])
+                c = np.trace(R) - 1
+                # Note: we actually compute double of cos and sin, but arctan2 is invariant to scale
+                RE += np.arctan2(s,c)
+
+            return ATE/snippet_length, RE/snippet_length
+
+        model_creator = ModelCreator(self.args)
+        dataloader_creator = DataLoaderCreator(self.args)
+
+        if self.args.poseexpnet_architecture and not self.args.posenet_architecture:
+            self.pose_net = model_creator.create(model='poseexpnet')
+            self.pose_net.eval()
+        else:
+            self.pose_net = model_creator.create(model='posenet')
+            self.pose_net.eval()
+
+        seq_length = int(self.pose_net.module.state_dict()['conv1.0.weight'].size(1)/3)
+        self.test_loader = dataloader_creator.create(mode='test_pose', seq_length=seq_length) 
+
+        print('{} snippets to test'.format(len(self.test_loader)))
+        errors = np.zeros((len(self.test_loader), 2), np.float32)
+        if self.args.output_dir is not None:
+            output_dir = Path(self.args.output_dir)
+            output_dir.makedirs_p()
+            predictions_array = np.zeros((len(self.test_loader), seq_length, 3, 4))
+
+        for j, sample in enumerate(tqdm(self.test_loader)):
+            imgs = sample['imgs']
+
+            h,w,_ = imgs[0].shape
+            if (not self.args.no_resize) and (h != self.args.img_height or w != self.args.img_width):
+                imgs = [imresize(img, (self.args.img_height, self.args.img_width)).astype(np.float32) for img in imgs]
+
+            imgs = [np.transpose(img, (2,0,1)) for img in imgs]
+
+            ref_imgs = []
+            for i, img in enumerate(imgs):
+                img = torch.from_numpy(img).unsqueeze(0)
+                img = ((img/255 - 0.5)/0.5).to(self.device)
+                if i == len(imgs)//2:
+                    tgt_img = img
+                else:
+                    ref_imgs.append(img)
+
+            if self.args.poseexpnet_architecture and not self.args.posenet_architecture:
+                _, poses = self.pose_net(tgt_img, ref_imgs)
+            else:
+                poses = self.pose_net(tgt_img, ref_imgs)
+
+            poses = poses.cpu()[0]
+            poses = torch.cat([poses[:len(imgs)//2], torch.zeros(1,6).float(), poses[len(imgs)//2:]])
+
+            inv_transform_matrices = pose_vec2mat(poses, rotation_mode=self.args.rotation_mode).numpy().astype(np.float64)
+
+            rot_matrices = np.linalg.inv(inv_transform_matrices[:,:,:3])
+            tr_vectors = -rot_matrices @ inv_transform_matrices[:,:,-1:]
+
+            transform_matrices = np.concatenate([rot_matrices, tr_vectors], axis=-1)
+
+            first_inv_transform = inv_transform_matrices[0]
+            final_poses = first_inv_transform[:,:3] @ transform_matrices
+            final_poses[:,:,-1:] += first_inv_transform[:,-1:]
+
+            if self.args.output_dir is not None:
+                predictions_array[j] = final_poses
+
+            ATE, RE = compute_pose_error(sample['poses'], final_poses)
+            errors[j] = ATE, RE
+
+        mean_errors = errors.mean(0)
+        std_errors = errors.std(0)
+        error_names = ['ATE','RE']
+        print('')
+        print("Results")
+        print("\t {:>10}, {:>10}".format(*error_names))
+        print("mean \t {:10.4f}, {:10.4f}".format(*mean_errors))
+        print("std \t {:10.4f}, {:10.4f}".format(*std_errors))
+
+        if self.args.output_dir is not None:
+            np.save(output_dir/'predictions.npy', predictions_array)
+
+    @torch.no_grad()
     def infer(self):
         if not(self.args.output_disp or self.args.output_depth):
             print('You must at least output disp value or depth value of image !')

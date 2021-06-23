@@ -414,6 +414,8 @@ class SfmLearnerConfig:
                             help='if selected, will get displacement from GPS for KITTI. Otherwise, will integrate speed')
         self.parser.add_argument("--img-exts", default=['png', 'jpg', 'bmp'], nargs='*', type=str, help="images extensions to glob")
 
+        self.parser.add_argument("--sequences", default=['09'], type=str, nargs='*', help="sequences to test")
+
         self.parser.add_argument("--output-disp", action='store_true', help="save disparity img")
         self.parser.add_argument("--output-depth", action='store_true', help="save depth img")
 #endregion

@@ -6,7 +6,7 @@ from path import Path
 class DataLoaderCreator():
     def __init__(self, args):
         self.args = args
-    def create(self, mode):
+    def create(self, mode, seq_length=1):
         if self.args.dataset_format == 'stacked':
             from datasets.stacked_sequence_folders import SequenceFolder
         elif self.args.dataset_format == 'sequential':
@@ -93,6 +93,14 @@ class DataLoaderCreator():
             print('{} files to test'.format(len(test_files)))
             framework = test_framework(dataset_dir, test_files, 1,
                             self.args.min_depth, self.args.max_depth)
+
+            return framework
+
+        elif mode == 'test_pose':
+            from kitti_eval.pose_evaluation_utils import test_framework_KITTI as test_framework
+
+            dataset_dir = Path(self.args.dataset_dir)
+            framework = test_framework(dataset_dir, self.args.sequences, seq_length)
 
             return framework
 
