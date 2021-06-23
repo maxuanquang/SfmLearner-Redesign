@@ -69,13 +69,10 @@ class SfmLearner():
         dataloader_creator = DataLoaderCreator(self.args)
 
         self.disp_net = model_creator.create(model='dispnet')
-        if self.args.poseexpnet_architecture:
-            self.pose_exp_net = model_creator.create(model='poseexpnet')
-            self.optimizer = optimizer_creator.create(self.disp_net, self.pose_exp_net)
-        else:
+        self.pose_net = model_creator.create(model='posenet')
+        if not self.args.posenet_architecture == "PoseExpNet":
             self.args.mask_loss_weight = 0 # because posenet does not output explainability mask
-            self.pose_net = model_creator.create(model='posenet')
-            self.optimizer = optimizer_creator.create(self.disp_net, self.pose_net)
+        self.optimizer = optimizer_creator.create(self.disp_net, self.pose_net)
 
         self.train_loader = dataloader_creator.create(mode='train') 
         self.val_loader = dataloader_creator.create(mode='val')
@@ -567,7 +564,7 @@ class SfmLearner():
 
         # switch to train mode
         self.disp_net.train()
-        self.pose_exp_net.train()
+        self.pose_net.train()
 
         end = time.time()
         self.logger.train_bar.update(0)
@@ -585,7 +582,7 @@ class SfmLearner():
             # compute output
             disparities = self.disp_net(tgt_img)
             depth = [1/disp for disp in disparities]
-            if self.args.poseexpnet_architecture:
+            if self.args.posenet_architecture:
                 explainability_mask, pose = self.pose_exp_net(tgt_img, ref_imgs)
             else:
                 pose = self.pose_net(tgt_img, ref_imgs)

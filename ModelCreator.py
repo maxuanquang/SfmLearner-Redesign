@@ -40,43 +40,51 @@ class ModelCreator():
 
             return disp_net
 
-        # create poseexp model
-        elif model == 'poseexpnet':
-            print("=> creating explainability pose network")
+        # # create poseexp model
+        # elif model == 'poseexpnet':
+        #     print("=> creating explainability pose network")
 
-            output_exp = self.args.mask_loss_weight > 0
-            if not output_exp:
-                print("=> no mask loss, PoseExpnet will only output pose")
-            pose_exp_net = models.PoseExpNet(nb_ref_imgs=self.args.sequence_length - 1, output_exp=self.args.mask_loss_weight > 0).to(torch.device("cuda"))
+        #     output_exp = self.args.mask_loss_weight > 0
+        #     if not output_exp:
+        #         print("=> no mask loss, PoseExpnet will only output pose")
+        #     pose_exp_net = models.PoseExpNet(nb_ref_imgs=self.args.sequence_length - 1, output_exp=self.args.mask_loss_weight > 0).to(torch.device("cuda"))
 
-            if self.args.pretrained_pose_exp and not self.args.resume:
-                print("=> using pre-trained weights for explainabilty and pose net")
-                weights = torch.load(self.args.pretrained_pose_exp)
-                pose_exp_net.load_state_dict(weights['state_dict'], strict=False)
-            elif self.args.resume:
-                print("=> resuming Exp_pose_net from checkpoint")
-                weights = torch.load(self.args.save_path/'pose_exp_checkpoint.pth.tar')
-                pose_exp_net.load_state_dict(weights['state_dict'])
-            else:
-                print('=> initializing Pose-exp-net weights')
-                pose_exp_net.init_weights()
+        #     if self.args.pretrained_pose_exp and not self.args.resume:
+        #         print("=> using pre-trained weights for explainabilty and pose net")
+        #         weights = torch.load(self.args.pretrained_pose_exp)
+        #         pose_exp_net.load_state_dict(weights['state_dict'], strict=False)
+        #     elif self.args.resume:
+        #         print("=> resuming Exp_pose_net from checkpoint")
+        #         weights = torch.load(self.args.save_path/'pose_exp_checkpoint.pth.tar')
+        #         pose_exp_net.load_state_dict(weights['state_dict'])
+        #     else:
+        #         print('=> initializing Pose-exp-net weights')
+        #         pose_exp_net.init_weights()
 
-            cudnn.benchmark = True
-            pose_exp_net = torch.nn.DataParallel(pose_exp_net)
+        #     cudnn.benchmark = True
+        #     pose_exp_net = torch.nn.DataParallel(pose_exp_net)
 
-            return pose_exp_net
+        #     return pose_exp_net
 
         # create pose network
         elif model == 'posenet':
-            print("=> creating pose network")
+            if not self.args.posenet_architecture == 'PoseExpNet':
+                print("=> creating pose network")
+            else:
+                print("=> creating explainability pose network")
+                output_exp = self.args.mask_loss_weight > 0
+                if not output_exp:
+                    print("=> no mask loss, PoseExpnet will only output pose")
 
             if self.args.posenet_architecture == 'PoseNet6':
                 pose_net = models.PoseNet6(nb_ref_imgs=self.args.sequence_length - 1).to(torch.device("cuda"))
             elif self.args.posenet_architecture == 'PoseNetB6':
                 pose_net = models.PoseNetB6(nb_ref_imgs=self.args.sequence_length - 1).to(torch.device("cuda"))
+            elif self.args.posenet_architecture == 'PoseExpNet':
+                pose_net = models.PoseExpNet(nb_ref_imgs=self.args.sequence_length - 1, output_exp=self.args.mask_loss_weight > 0).to(torch.device("cuda"))
 
             if self.args.pretrained_posenet and not self.args.resume:
-                print("=> using pre-trained weights for explainabilty and pose net")
+                print("=> using pre-trained weights for posenet")
                 weights = torch.load(self.args.pretrained_posenet)
                 pose_net.load_state_dict(weights['state_dict'], strict=False)
             elif self.args.resume:
