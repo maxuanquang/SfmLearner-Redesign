@@ -148,7 +148,7 @@ class SfmLearner():
                     }, {
                         'epoch': epoch + 1,
                         'state_dict': self.optimizer.state_dict(),
-                        'name': "optmizer"
+                        'name': "optimizer"
                     },
                     is_best)
             self.reporter.update_log_summary(train_loss, decisive_error, errors)
@@ -279,12 +279,8 @@ class SfmLearner():
         model_creator = ModelCreator(self.args)
         dataloader_creator = DataLoaderCreator(self.args)
 
-        if self.args.poseexpnet_architecture and not self.args.posenet_architecture:
-            self.pose_net = model_creator.create(model='poseexpnet')
-            self.pose_net.eval()
-        else:
-            self.pose_net = model_creator.create(model='posenet')
-            self.pose_net.eval()
+        self.pose_net = model_creator.create(model='posenet')
+        self.pose_net.eval()
 
         seq_length = int(self.pose_net.module.state_dict()['conv1.0.weight'].size(1)/3)
         self.test_loader = dataloader_creator.create(mode='test_posenet', seq_length=seq_length) 
@@ -314,7 +310,7 @@ class SfmLearner():
                 else:
                     ref_imgs.append(img)
 
-            if self.args.poseexpnet_architecture and not self.args.posenet_architecture:
+            if self.args.posenet_architecture == "PoseExpNet":
                 _, poses = self.pose_net(tgt_img, ref_imgs)
             else:
                 poses = self.pose_net(tgt_img, ref_imgs)
