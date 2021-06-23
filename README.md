@@ -40,7 +40,7 @@ path.py
 
 ### What has been done
 
-* Train disparity network, pose network, mask network, optical flow network easily with different architectures, different losses and different strategies.
+* Train disparity network, pose network easily with different architectures, different losses and different strategies.
 
 ## Preparing training data
 Preparation is roughly the same command as in the original code.
@@ -70,7 +70,7 @@ Notice that for Cityscapes the `img_height` is set to 171 because we crop out th
 Once the data are formatted following the above instructions, you should be able to train the model by running the following command
 ```bash
 python runner.py --train \
---dispnet-architecture DispNetS \
+--dispnet-architecture DispNetS --nlevels 4 \
 --posenet-architecture PoseExpNet \
 --dataset-dir /path/to/the/formatted/data/ \
 -b 4 -m 0.2 -s 0.1 \
@@ -80,7 +80,7 @@ python runner.py --train \
 You can train the models with pretrained models by running the following command
 ```bash
 python runner.py --train \
---dispnet-architecture DispNetS \
+--dispnet-architecture DispNetS --nlevels 4 \
 --posenet-architecture PoseExpNet \
 --pretrained-dispnet /path/to/pretrained/dispnet \
 --pretrained-posenet /path/to/pretrained/posenet \
@@ -92,7 +92,7 @@ python runner.py --train \
 You can kick off training from checkpoint by running the following command
 ```bash
 python runner.py --train \
---dispnet-architecture DispNetS \
+--dispnet-architecture DispNetS --nlevels 4 \
 --posenet-architecture PoseExpNet \
 --dataset-dir /path/to/the/formatted/data/ \
 -b 4 -m 0.2 -s 0.1 \

@@ -100,10 +100,10 @@ class ModelCreator():
 
             return pose_net
 
-        # create mask network
-        elif model == 'masknet':
-            pass
+        # # create mask network
+        # elif model == 'masknet':
+        #     pass
 
-        # create flow network
-        elif model == 'flownet':
-            pass
+        # # create flow network
+        # elif model == 'flownet':
+        #     pass

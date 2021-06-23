@@ -112,14 +112,14 @@ class SfmLearnerConfig:
                                 type=float, 
                                 default=0.1,
                                 help='weight for smoothness loss')
-        self.parser.add_argument('--photometric-flow-loss-weight', 
-                                type=float, 
-                                default=0.0,
-                                help='weight for photometric flow loss')
-        self.parser.add_argument('--consensus-depth-flow-loss-weight', 
-                                type=float, 
-                                default=0.0,
-                                help='weight for consensus depth flow loss')
+        # self.parser.add_argument('--photometric-flow-loss-weight', 
+        #                         type=float, 
+        #                         default=0.0,
+        #                         help='weight for photometric flow loss')
+        # self.parser.add_argument('--consensus-depth-flow-loss-weight', 
+        #                         type=float, 
+        #                         default=0.0,
+        #                         help='weight for consensus depth flow loss')
         #endregion
 
         #region Config photometric reconstruction and photometric flow loss
@@ -181,10 +181,10 @@ class SfmLearnerConfig:
                                 type=self.str2bool, 
                                 default=True, 
                                 help='use depth for calculate smoothness loss')
-        self.parser.add_argument('--use-flow-smooth',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use flow for calculate smoothness loss')
+        # self.parser.add_argument('--use-flow-smooth',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use flow for calculate smoothness loss')
         self.parser.add_argument('--use-mask-smooth',
                                 type=self.str2bool, 
                                 default=False, 
@@ -198,10 +198,10 @@ class SfmLearnerConfig:
                                 type=float, 
                                 default=1,
                                 help='depth-smooth weight in smoothness loss')
-        self.parser.add_argument('--flow-smooth-weight', 
-                                type=float, 
-                                default=1,
-                                help='flow-smooth weight in smoothness loss')
+        # self.parser.add_argument('--flow-smooth-weight', 
+        #                         type=float, 
+        #                         default=1,
+        #                         help='flow-smooth weight in smoothness loss')
         self.parser.add_argument('--mask-smooth-weight', 
                                 type=float, 
                                 default=1,
@@ -226,10 +226,10 @@ class SfmLearnerConfig:
         #endregion
 
         #region Config consensus depth flow loss
-        self.parser.add_argument('--lambda-c', 
-                                type=float, 
-                                default=0.001,
-                                help='lambda_C constant')
+        # self.parser.add_argument('--lambda-c', 
+        #                         type=float, 
+        #                         default=0.001,
+        #                         help='lambda_C constant')
         #endregion
 
         #endregion
@@ -281,52 +281,52 @@ class SfmLearnerConfig:
         #endregion
 
         #region CONFIG FLOWNET
-        self.parser.add_argument('--flownet-architecture',
-                                default=None,
-                                help='disparity network architecture')
-        self.parser.add_argument('--pretrained-flownet', 
-                                dest='pretrained_flow', 
-                                default=None, 
-                                metavar='PATH',
-                                help='path to pre-trained flownet model')
-        self.parser.add_argument('--with-flow-gt',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
-        self.parser.add_argument('--flownet-decisive-error',
-                                type=str,
-                                choices=['epe_total', 'epe_rigid', 'epe_non_rigid', 'outliers', 'epe_total_with_gt_mask', 'epe_rigid_with_gt_mask', 'epe_non_rigid_with_gt_mask', 'outliers_gt_mask'],
-                                default='epe_non_rigid_with_gt_mask',
-                                help='decisive error for choosing best flownet model')
+        # self.parser.add_argument('--flownet-architecture',
+        #                         default=None,
+        #                         help='disparity network architecture')
+        # self.parser.add_argument('--pretrained-flownet', 
+        #                         dest='pretrained_flow', 
+        #                         default=None, 
+        #                         metavar='PATH',
+        #                         help='path to pre-trained flownet model')
+        # self.parser.add_argument('--with-flow-gt',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
+        # self.parser.add_argument('--flownet-decisive-error',
+        #                         type=str,
+        #                         choices=['epe_total', 'epe_rigid', 'epe_non_rigid', 'outliers', 'epe_total_with_gt_mask', 'epe_rigid_with_gt_mask', 'epe_non_rigid_with_gt_mask', 'outliers_gt_mask'],
+        #                         default='epe_non_rigid_with_gt_mask',
+        #                         help='decisive error for choosing best flownet model')
         #endregion
 
         #region CONFIG MASKNET
-        self.parser.add_argument('--masknet-architecture',
-                                default=None,
-                                help='disparity network architecture')
-        self.parser.add_argument('--pretrained-masknet', 
-                                dest='pretrained_disp',
-                                default=None, 
-                                metavar='PATH',
-                                help='path to pre-trained dispnet model')
-        self.parser.add_argument('--with-mask-gt',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
-        self.parser.add_argument('--masknet-decisive-error',
-                                type=str,
-                                choices=['epe_total', 'epe_rigid', 'epe_non_rigid', 'outliers', 'epe_total_with_gt_mask', 'epe_rigid_with_gt_mask', 'epe_non_rigid_with_gt_mask', 'outliers_gt_mask'],
-                                default='outliers',
-                                help='decisive error for choosing best masknet model')
+        # self.parser.add_argument('--masknet-architecture',
+        #                         default=None,
+        #                         help='disparity network architecture')
+        # self.parser.add_argument('--pretrained-masknet', 
+        #                         dest='pretrained_disp',
+        #                         default=None, 
+        #                         metavar='PATH',
+        #                         help='path to pre-trained dispnet model')
+        # self.parser.add_argument('--with-mask-gt',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use depth ground truth for validation, You need to store it in npy 2D arrays see data/kitti_raw_loader.py for an example')
+        # self.parser.add_argument('--masknet-decisive-error',
+        #                         type=str,
+        #                         choices=['epe_total', 'epe_rigid', 'epe_non_rigid', 'outliers', 'epe_total_with_gt_mask', 'epe_rigid_with_gt_mask', 'epe_non_rigid_with_gt_mask', 'outliers_gt_mask'],
+        #                         default='outliers',
+        #                         help='decisive error for choosing best masknet model')
         #endregion
 
         #region CONFIG OTHER
         self.parser.add_argument('--train',
                                 action='store_true',
                                 help='train model')
-        self.parser.add_argument('--evaluate',
-                                action='store_true',
-                                help='evaluate model performance on benchmarks')
+        # self.parser.add_argument('--evaluate',
+        #                         action='store_true',
+        #                         help='evaluate model performance on benchmarks')
         self.parser.add_argument('--infer',
                                 action='store_true',
                                 help='model inference')
@@ -334,9 +334,9 @@ class SfmLearnerConfig:
         self.parser.add_argument('--eval-dispnet',
                                 action='store_true',
                                 help='evaluate dispnet performance on benchmarks')
-        self.parser.add_argument('--eval-poseexpnet',
-                                action='store_true',
-                                help='evaluate pose_exp_net performance on benchmarks')
+        # self.parser.add_argument('--eval-poseexpnet',
+        #                         action='store_true',
+        #                         help='evaluate pose_exp_net performance on benchmarks')
         self.parser.add_argument('--eval-posenet',
                                 action='store_true',
                                 help='evaluate posenet performance on benchmarks')
@@ -347,7 +347,7 @@ class SfmLearnerConfig:
                                 metavar='N',
                                 help='number of total epochs to run')
         self.parser.add_argument('--epoch-size', 
-                                default=200, 
+                                default=0, 
                                 type=int, 
                                 metavar='N',
                                 help='manual epoch size (will match dataset size if not set)')

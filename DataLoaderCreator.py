@@ -39,7 +39,7 @@ class DataLoaderCreator():
 
             return train_loader
 
-        elif mode == "val":
+        elif mode == "validate":
             # Data loading code
             normalize = custom_transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
         
@@ -76,7 +76,7 @@ class DataLoaderCreator():
 
             return val_loader
 
-        elif mode == 'test_eigen':
+        elif mode == 'test_dispnet':
             if self.args.gt_type == 'KITTI':
                 from kitti_eval.depth_evaluation_utils import test_framework_KITTI as test_framework
             elif self.args.gt_type == 'stillbox':
@@ -96,7 +96,7 @@ class DataLoaderCreator():
 
             return framework
 
-        elif mode == 'test_pose':
+        elif mode == 'test_posenet':
             from kitti_eval.pose_evaluation_utils import test_framework_KITTI as test_framework
 
             dataset_dir = Path(self.args.dataset_dir)
@@ -104,7 +104,7 @@ class DataLoaderCreator():
 
             return framework
 
-        elif mode == 'inference':
+        elif mode == 'infer_dispnet':
             dataset_dir = Path(self.args.dataset_dir)
 
             if self.args.dataset_list is not None:

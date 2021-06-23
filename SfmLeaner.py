@@ -75,7 +75,7 @@ class SfmLearner():
         self.optimizer = optimizer_creator.create(self.disp_net, self.pose_net)
 
         self.train_loader = dataloader_creator.create(mode='train') 
-        self.val_loader = dataloader_creator.create(mode='val')
+        self.val_loader = dataloader_creator.create(mode='validate')
         self.sfmlearner_loss = SfmLearnerLoss(self.args)
 
         # objects serve for training
@@ -119,7 +119,7 @@ class SfmLearner():
             # remember lowest error and save checkpoint
             is_best = decisive_error <= self.best_error
             self.best_error = min(self.best_error, decisive_error)
-            if self.args.poseexpnet_architecture:
+            if self.args.posenet_architecture == "PoseExpNet":
                 save_checkpoint(
                     self.args.save_path, {
                         'epoch': epoch + 1,
@@ -127,7 +127,7 @@ class SfmLearner():
                         'name': "dispnet"
                     }, {
                         'epoch': epoch + 1,
-                        'state_dict': self.pose_exp_net.module.state_dict(),
+                        'state_dict': self.pose_net.module.state_dict(),
                         'name': "pose_exp"
                     }, {
                         'epoch': epoch + 1,
@@ -190,7 +190,7 @@ class SfmLearner():
         dataloader_creator = DataLoaderCreator(self.args)
 
         self.disp_net = model_creator.create(model='dispnet')
-        self.test_loader = dataloader_creator.create(mode='test_eigen') 
+        self.test_loader = dataloader_creator.create(mode='test_dispnet') 
 
         self.args.max_depth = int(self.args.max_depth)
         self.disp_net.eval()
@@ -287,7 +287,7 @@ class SfmLearner():
             self.pose_net.eval()
 
         seq_length = int(self.pose_net.module.state_dict()['conv1.0.weight'].size(1)/3)
-        self.test_loader = dataloader_creator.create(mode='test_pose', seq_length=seq_length) 
+        self.test_loader = dataloader_creator.create(mode='test_posenet', seq_length=seq_length) 
 
         print('{} snippets to test'.format(len(self.test_loader)))
         errors = np.zeros((len(self.test_loader), 2), np.float32)
@@ -361,7 +361,7 @@ class SfmLearner():
         dataloader_creator = DataLoaderCreator(self.args)
 
         self.disp_net = model_creator.create(model='dispnet')
-        self.inference_loader = dataloader_creator.create(mode='inference')
+        self.inference_loader = dataloader_creator.create(mode='infer_dispnet')
 
         output_dir = Path(self.args.output_dir)
         output_dir.makedirs_p()
@@ -416,7 +416,7 @@ class SfmLearner():
 
         # switch to evaluate mode
         self.disp_net.eval()
-        self.pose_exp_net.eval()
+        self.pose_net.eval()
 
         end = time.time()
         self.logger.valid_bar.update(0)
@@ -430,7 +430,14 @@ class SfmLearner():
             # compute output
             output_disp = self.disp_net(tgt_img)
             output_depth = 1/output_disp
-            explainability_mask, output_poses = self.pose_exp_net(tgt_img, ref_imgs)
+            if self.args.posenet_architecture == "PoseExpNet":
+                explainability_mask, output_poses = self.pose_net(tgt_img, ref_imgs)
+            else:
+                output_poses = self.pose_net(tgt_img, ref_imgs)
+                explainability_mask = []
+                for _ in range(self.args.nlevels):
+                    explainability_mask.append(None)
+
 
             reordered_output_poses = torch.cat([output_poses[:, :gt_poses.shape[1]//2],
                                                 torch.zeros(b, 1, 6).to(output_poses),
@@ -559,8 +566,8 @@ class SfmLearner():
         w1 = self.args.photo_loss_weight
         w2 = self.args.mask_loss_weight
         w3 = self.args.smooth_loss_weight
-        w4 = self.args.photometric_flow_loss_weight
-        w5 = self.args.consensus_depth_flow_loss_weight
+        # w4 = self.args.photometric_flow_loss_weight
+        # w5 = self.args.consensus_depth_flow_loss_weight
 
         # switch to train mode
         self.disp_net.train()
@@ -582,8 +589,8 @@ class SfmLearner():
             # compute output
             disparities = self.disp_net(tgt_img)
             depth = [1/disp for disp in disparities]
-            if self.args.posenet_architecture:
-                explainability_mask, pose = self.pose_exp_net(tgt_img, ref_imgs)
+            if self.args.posenet_architecture == "PoseExpNet":
+                explainability_mask, pose = self.pose_net(tgt_img, ref_imgs)
             else:
                 pose = self.pose_net(tgt_img, ref_imgs)
                 explainability_mask = []
@@ -601,10 +608,10 @@ class SfmLearner():
                     self.tb_writer.add_scalar('explainability_loss', losses_dict['explainability_loss'], self.n_iter)
                 if w3 > 0:
                     self.tb_writer.add_scalar('smooth_loss', losses_dict['smooth_loss'], self.n_iter)
-                if w4 > 0:
-                    self.tb_writer.add_scalar('photometric_flow_loss', losses_dict['photometric_flow_loss'].item(), self.n_iter)
-                if w5 > 0:
-                    self.tb_writer.add_scalar('consensus_depth_flow_loss', losses_dict['consensus_depth_flow_loss'].item(), self.n_iter)
+                # if w4 > 0:
+                #     self.tb_writer.add_scalar('photometric_flow_loss', losses_dict['photometric_flow_loss'].item(), self.n_iter)
+                # if w5 > 0:
+                #     self.tb_writer.add_scalar('consensus_depth_flow_loss', losses_dict['consensus_depth_flow_loss'].item(), self.n_iter)
                 
             if log_output:
                 results_dict = self.sfmlearner_loss.calculate_intermediate_results(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose)
