@@ -48,11 +48,11 @@ class ModelCreator():
                 print("=> no mask loss, PoseExpnet will only output pose")
             pose_exp_net = models.PoseExpNet(nb_ref_imgs=self.args.sequence_length - 1, output_exp=self.args.mask_loss_weight > 0).to(torch.device("cuda"))
 
-            if self.args.pretrained_pose_exp:
+            if self.args.pretrained_pose_exp and not self.args.resume:
                 print("=> using pre-trained weights for explainabilty and pose net")
                 weights = torch.load(self.args.pretrained_pose_exp)
                 pose_exp_net.load_state_dict(weights['state_dict'], strict=False)
-            if self.args.resume:
+            elif self.args.resume:
                 print("=> resuming Exp_pose_net from checkpoint")
                 weights = torch.load(self.args.save_path/'pose_exp_checkpoint.pth.tar')
                 pose_exp_net.load_state_dict(weights['state_dict'])
@@ -73,11 +73,11 @@ class ModelCreator():
             elif self.args.posenet_architecture == 'PoseNetB6':
                 pose_net = models.PoseNetB6(nb_ref_imgs=self.args.sequence_length - 1).to(torch.device("cuda"))
 
-            if self.args.pretrained_pose:
+            if self.args.pretrained_pose and not self.args.resume:
                 print("=> using pre-trained weights for explainabilty and pose net")
                 weights = torch.load(self.args.pretrained_pose)
                 pose_net.load_state_dict(weights['state_dict'], strict=False)
-            if self.args.resume:
+            elif self.args.resume:
                 print("=> resuming posenet from checkpoint")
                 weights = torch.load(self.args.save_path/'posenet_checkpoint.pth.tar')
                 pose_net.load_state_dict(weights['state_dict'])
