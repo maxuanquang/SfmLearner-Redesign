@@ -154,7 +154,7 @@ class SfmLearnerConfig:
                                 help='L2 weight in photometric reconstruction and photometric flow loss')
         self.parser.add_argument('--ssim-photometric-weight', 
                                 type=float, 
-                                default=0.8,
+                                default=0,
                                 help='SSIM weight in photometric reconstruction and photometric flow loss')
 
         self.parser.add_argument('--min-photometric',
@@ -168,31 +168,31 @@ class SfmLearnerConfig:
 
         self.parser.add_argument('--use-mask-for-photometric',
                                 type=self.str2bool, 
-                                default=False, 
+                                default=True, 
                                 help='mutiply explainability mask into photometric reconstruction and photometric flow loss')
         #endregion
 
         #region Config smooth loss
-        self.parser.add_argument('--use-disp-smooth',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use disp for calculate smoothness loss')
-        self.parser.add_argument('--use-depth-smooth',
-                                type=self.str2bool, 
-                                default=True, 
-                                help='use depth for calculate smoothness loss')
+        # self.parser.add_argument('--use-disp-smooth',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use disp for calculate smoothness loss')
+        # self.parser.add_argument('--use-depth-smooth',
+        #                         type=self.str2bool, 
+        #                         default=True, 
+        #                         help='use depth for calculate smoothness loss')
         # self.parser.add_argument('--use-flow-smooth',
         #                         type=self.str2bool, 
         #                         default=False, 
         #                         help='use flow for calculate smoothness loss')
-        self.parser.add_argument('--use-mask-smooth',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use mask for calculate smoothness loss')
+        # self.parser.add_argument('--use-mask-smooth',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use mask for calculate smoothness loss')
 
         self.parser.add_argument('--disp-smooth-weight', 
                                 type=float, 
-                                default=1,
+                                default=0,
                                 help='disp-smooth weight in smoothness loss')
         self.parser.add_argument('--depth-smooth-weight', 
                                 type=float, 
@@ -204,7 +204,7 @@ class SfmLearnerConfig:
         #                         help='flow-smooth weight in smoothness loss')
         self.parser.add_argument('--mask-smooth-weight', 
                                 type=float, 
-                                default=1,
+                                default=0,
                                 help='mask-smooth weight in smoothness loss')
 
         self.parser.add_argument('--use-first-derivative',

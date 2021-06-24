@@ -74,7 +74,7 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
 
         current_loss = diff_loss + ssim_loss
 
-        if explainability_mask is not None:
+        if explainability_mask is not None and args.use_mask_for_photometric:
             current_loss = current_loss * explainability_mask[:,i:i+1].expand_as(current_loss)
 
         if args.mean_photometric:
