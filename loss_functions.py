@@ -77,7 +77,7 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         if explainability_mask is not None and args.use_mask_for_photometric:
             current_loss = current_loss * explainability_mask[:,i:i+1].expand_as(current_loss)
 
-        if args.mean_photometric:
+        if args.mean_photometric and not args.min_photometric:
             reconstruction_loss += current_loss.mean()
             assert((reconstruction_loss == reconstruction_loss).item() == 1)
         elif args.min_photometric:
