@@ -59,15 +59,14 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         diff = (tgt_img_scaled - ref_img_warped) * valid_points.unsqueeze(1).float()
 
         diff_loss = 0
-
-        if args.L1_photometric:
+        if args.L1_photometric_weight > 0:
             diff_loss += l1_per_pix(diff)*args.L1_photometric_weight
-        if args.robust_L1_photometric:
+        if args.robust_L1_photometric_weight > 0:
             diff_loss += robust_l1_per_pix(diff)*args.robust_L1_photometric_weight
-        if args.L2_photometric:
+        if args.L2_photometric_weight > 0:
             diff_loss += l2_per_pix(diff)*args.L2_photometric_weight
 
-        if args.ssim_photometric:
+        if args.ssim_photometric_weight > 0:
             ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped)
             ssim_loss = ssim_loss * args.ssim_photometric_weight
         else:

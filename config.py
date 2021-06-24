@@ -123,22 +123,22 @@ class SfmLearnerConfig:
         #endregion
 
         #region Config photometric reconstruction and photometric flow loss
-        self.parser.add_argument('--L1-photometric',
-                                type=self.str2bool, 
-                                default=True, 
-                                help='use L1 for photometric reconstruction and photometric flow loss')
-        self.parser.add_argument('--robust-L1-photometric',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use robust L1 photometric reconstruction and photometric flow loss')
-        self.parser.add_argument('--L2-photometric',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use L2 photometric reconstruction and photometric flow loss')
-        self.parser.add_argument('--ssim-photometric',
-                                type=self.str2bool, 
-                                default=False, 
-                                help='use ssim photometric reconstruction and photometric flow loss')
+        # self.parser.add_argument('--L1-photometric',
+        #                         type=self.str2bool, 
+        #                         default=True, 
+        #                         help='use L1 for photometric reconstruction and photometric flow loss')
+        # self.parser.add_argument('--robust-L1-photometric',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use robust L1 photometric reconstruction and photometric flow loss')
+        # self.parser.add_argument('--L2-photometric',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use L2 photometric reconstruction and photometric flow loss')
+        # self.parser.add_argument('--ssim-photometric',
+        #                         type=self.str2bool, 
+        #                         default=False, 
+        #                         help='use ssim photometric reconstruction and photometric flow loss')
 
         self.parser.add_argument('--L1-photometric-weight', 
                                 type=float, 
