@@ -9,6 +9,7 @@ from .DispResNetS6 import DispResNetS6
 from .PoseExpNet import PoseExpNet
 from .PoseNet6 import PoseNet6
 from .PoseNetB6 import PoseNetB6
+from .PoseExpNet6 import PoseExpNet6
 
 from .MaskNet6 import MaskNet6
 from .MaskResNet6 import MaskResNet6

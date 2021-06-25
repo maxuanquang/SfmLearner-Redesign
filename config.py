@@ -267,7 +267,7 @@ class SfmLearnerConfig:
         #                         help='path to pre-trained Exp Pose net model')
         self.parser.add_argument('--posenet-architecture',
                                 default='PoseExpNet',
-                                choices=['PoseExpNet', 'PoseNet6', 'PoseNetB6'],
+                                choices=['PoseExpNet', 'PoseExpNet6', 'PoseNet6', 'PoseNetB6'],
                                 help='pose estimation network architecture')
         self.parser.add_argument('--pretrained-posenet', 
                                 dest='pretrained_posenet', 
