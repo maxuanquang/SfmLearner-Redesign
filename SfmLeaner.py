@@ -37,6 +37,11 @@ class SfmLearner():
         self.start_epoch = 0
         self.device = torch.device("cuda")
 
+        if "PoseExpNet" in self.args.posenet_architecture:
+            self.args.use_poseexpnet = True
+        else:
+            self.args.use_poseexpnet = False
+
         if self.args.resume:
             # read n_iter
             with open(self.args.save_path/'n_iter.txt','r') as f:
@@ -70,7 +75,7 @@ class SfmLearner():
 
         self.disp_net = model_creator.create(model='dispnet')
         self.pose_net = model_creator.create(model='posenet')
-        if not self.args.posenet_architecture == "PoseExpNet":
+        if not self.args.use_poseexpnet:
             self.args.mask_loss_weight = 0 # because posenet does not output explainability mask
         self.optimizer = optimizer_creator.create(self.disp_net, self.pose_net)
 
@@ -119,7 +124,7 @@ class SfmLearner():
             # remember lowest error and save checkpoint
             is_best = decisive_error <= self.best_error
             self.best_error = min(self.best_error, decisive_error)
-            if self.args.posenet_architecture == "PoseExpNet":
+            if self.args.use_poseexpnet:
                 save_checkpoint(
                     self.args.save_path, {
                         'epoch': epoch + 1,
@@ -310,7 +315,7 @@ class SfmLearner():
                 else:
                     ref_imgs.append(img)
 
-            if self.args.posenet_architecture == "PoseExpNet":
+            if self.args.use_poseexpnet:
                 _, poses = self.pose_net(tgt_img, ref_imgs)
             else:
                 poses = self.pose_net(tgt_img, ref_imgs)
@@ -426,7 +431,7 @@ class SfmLearner():
             # compute output
             output_disp = self.disp_net(tgt_img)
             output_depth = 1/output_disp
-            if self.args.posenet_architecture == "PoseExpNet":
+            if self.args.use_poseexpnet:
                 explainability_mask, output_poses = self.pose_net(tgt_img, ref_imgs)
             else:
                 output_poses = self.pose_net(tgt_img, ref_imgs)
@@ -585,7 +590,7 @@ class SfmLearner():
             # compute output
             disparities = self.disp_net(tgt_img)
             depth = [1/disp for disp in disparities]
-            if self.args.posenet_architecture == "PoseExpNet":
+            if self.args.use_poseexpnet:
                 explainability_mask, pose = self.pose_net(tgt_img, ref_imgs)
             else:
                 pose = self.pose_net(tgt_img, ref_imgs)

@@ -68,7 +68,7 @@ class ModelCreator():
 
         # create pose network
         elif model == 'posenet':
-            if not self.args.posenet_architecture == 'PoseExpNet':
+            if not self.args.use_poseexpnet:
                 print("=> creating pose network")
             else:
                 print("=> creating explainability pose network")
@@ -82,6 +82,8 @@ class ModelCreator():
                 pose_net = models.PoseNetB6(nb_ref_imgs=self.args.sequence_length - 1).to(torch.device("cuda"))
             elif self.args.posenet_architecture == 'PoseExpNet':
                 pose_net = models.PoseExpNet(nb_ref_imgs=self.args.sequence_length - 1, output_exp=self.args.mask_loss_weight > 0).to(torch.device("cuda"))
+            elif self.args.posenet_architecture == 'PoseExpNet6':
+                pose_net = models.PoseExpNet6(nb_ref_imgs=self.args.sequence_length - 1, output_exp=self.args.mask_loss_weight > 0).to(torch.device("cuda"))
 
             if self.args.pretrained_posenet and not self.args.resume:
                 print("=> using pre-trained weights for posenet")
@@ -89,7 +91,7 @@ class ModelCreator():
                 pose_net.load_state_dict(weights['state_dict'], strict=False)
             elif self.args.resume:
                 print("=> resuming posenet from checkpoint")
-                if self.args.posenet_architecture == 'PoseExpNet':
+                if self.args.use_poseexpnet:
                     weights = torch.load(self.args.save_path/'pose_exp_checkpoint.pth.tar')
                 else:
                     weights = torch.load(self.args.save_path/'posenet_checkpoint.pth.tar')
