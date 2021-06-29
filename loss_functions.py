@@ -67,7 +67,7 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
             diff_loss += l2_per_pix(diff)*args.L2_photometric_weight
 
         if args.ssim_photometric_weight > 0:
-            ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped)
+            ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_points.unsqueeze(1).float()
             ssim_loss = ssim_loss * args.ssim_photometric_weight
         else:
             ssim_loss = 0
