@@ -60,14 +60,18 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
 
         diff_loss = 0
         if args.L1_photometric_weight > 0:
-            diff_loss += l1_per_pix(diff)*args.L1_photometric_weight
+            diff_loss += l1_per_pix(diff)*args.L1_photometric_weight # [B,3,H,W]
         if args.robust_L1_photometric_weight > 0:
             diff_loss += robust_l1_per_pix(diff)*args.robust_L1_photometric_weight
         if args.L2_photometric_weight > 0:
             diff_loss += l2_per_pix(diff)*args.L2_photometric_weight
 
+        diff_loss = diff_loss.mean(1, True) # [B,1,H,W]
+
         if args.ssim_photometric_weight > 0:
-            ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_points.unsqueeze(1).float()
+            ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_points.unsqueeze(1).float() # [B,3,H,W]
+            ssim_loss = torch.clamp(ssim_loss/2, 0, 1)
+            ssim_loss = ssim_loss.mean(1, True)
             ssim_loss = ssim_loss * args.ssim_photometric_weight
         else:
             ssim_loss = 0
@@ -75,13 +79,14 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         current_loss = diff_loss + ssim_loss
 
         if explainability_mask is not None and args.use_mask_for_photometric:
-            current_loss = current_loss * explainability_mask[:,i:i+1].expand_as(current_loss)
+            current_loss = current_loss * explainability_mask[:,i:i+1].expand_as(current_loss) # explainability_mask[:,i:i+1] = [B,1,H,W]
 
         if args.mean_photometric and not args.min_photometric:
             reconstruction_loss += current_loss.mean()
             assert((reconstruction_loss == reconstruction_loss).item() == 1)
         elif args.min_photometric:
-            current_loss = current_loss.mean(1)
+            # current_loss = current_loss.mean(1)
+            current_loss = current_loss.unsqueeze(1)
             loss_list.append(current_loss)
 
         warped_imgs.append(ref_img_warped[0])
