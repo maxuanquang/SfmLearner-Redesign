@@ -24,8 +24,11 @@ class SfmLearnerLoss():
             
         if w3 > 0:
             loss_3 = 0
-
-            loss_3 = edge_aware_smoothness_loss(tgt_img, depth)
+            if self.args.spatial_normalize:
+                disparities = [1/d for d in depth]
+                loss_3 = edge_aware_smoothness_loss(tgt_img, disparities)
+            else:
+                loss_3 = edge_aware_smoothness_loss(tgt_img, depth)
             # if self.args.depth_smooth_weight > 0:
             #     loss_3 += smooth_loss(depth, self.args)*self.args.depth_smooth_weight
             # if self.args.disp_smooth_weight > 0:
