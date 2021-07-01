@@ -144,7 +144,7 @@ def explainability_loss(mask):
 
 def smooth_loss(pred_map, args):
     def gradient(pred):
-        D_dy = pred[:, :, 1:] - pred[:, :, :-1]
+        D_dy = pred[:, :, 1:, :] - pred[:, :, :-1, :]
         D_dx = pred[:, :, :, 1:] - pred[:, :, :, :-1]
         return D_dx, D_dy
 
@@ -157,6 +157,9 @@ def smooth_loss(pred_map, args):
     if args.use_second_derivative and args.use_L1_smooth:
         for scaled_map in pred_map:
             dx, dy = gradient(scaled_map)
+            weights_dx = torch.exp(-torch.mean(torch.abs(dx), 1, keepdim=True))
+            weights_dy = torch.exp(-torch.mean(torch.abs(dy), 1, keepdim=True))
+
             dx2, dxdy = gradient(dx)
             dydx, dy2 = gradient(dy)
             loss += (dx2.abs().mean() + dxdy.abs().mean() + dydx.abs().mean() + dy2.abs().mean())*weight
@@ -182,6 +185,41 @@ def smooth_loss(pred_map, args):
             loss += (l2(dx) + l2(dy))*weight
             weight /= 2.3  # don't ask me why it works better
         return loss
+
+
+def edge_aware_smoothness_loss(img, pred_disp):
+    def gradient_x(img):
+        gx = img[:,:,:-1,:] - img[:,:,1:,:]
+        return gx
+
+    def gradient_y(img):
+        gy = img[:,:,:,:-1] - img[:,:,:,1:]
+        return gy
+
+    def get_edge_smoothness(img, pred):
+        pred_gradients_x = gradient_x(pred)
+        pred_gradients_y = gradient_y(pred)
+
+        image_gradients_x = gradient_x(img)
+        image_gradients_y = gradient_y(img)
+
+        weights_x = torch.exp(-torch.mean(torch.abs(image_gradients_x), 1, keepdim=True))
+        weights_y = torch.exp(-torch.mean(torch.abs(image_gradients_y), 1, keepdim=True))
+
+        smoothness_x = torch.abs(pred_gradients_x) * weights_x
+        smoothness_y = torch.abs(pred_gradients_y) * weights_y
+        return torch.mean(smoothness_x) + torch.mean(smoothness_y)
+
+    loss = 0
+    weight = 1.
+
+    for scaled_disp in pred_disp:
+        b, _, h, w = scaled_disp.size()
+        scaled_img = nn.functional.adaptive_avg_pool2d(img, (h, w))
+        loss += get_edge_smoothness(scaled_img, scaled_disp)
+        weight /= 2.3   # 2sqrt(2)
+
+    return loss
 
 
 @torch.no_grad()
