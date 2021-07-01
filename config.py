@@ -396,6 +396,12 @@ class SfmLearnerConfig:
         self.parser.add_argument('--spatial-normalize',
                                 action='store_true',
                                 help='spatial normalize disparity map')
+        self.parser.add_argument('--normalize-ssim',
+                                action='store_true',
+                                help='normalize ssim loss')
+        self.parser.add_argument('--clamp-ssim',
+                                action='store_true',
+                                help='clamp ssim loss')          
         self.parser.add_argument('--resume',
                                 action='store_true',
                                 help='resume from checkpoint')

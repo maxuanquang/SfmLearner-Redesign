@@ -61,6 +61,7 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         ref_img_warped, valid_points = inverse_warp(ref_img, depth[:,0], current_pose,
                                                     intrinsics_scaled,
                                                     args.rotation_mode, args.padding_mode)
+        oob_normalization_const = valid_points.nelement()/valid_points.sum()
         diff = (tgt_img_scaled - ref_img_warped) * valid_points.unsqueeze(1).float()
 
         if explainability_mask is not None and args.use_mask_for_photometric:
@@ -78,7 +79,12 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
 
         if args.ssim_photometric_weight > 0:
             ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_points.unsqueeze(1).float() # [B,3,H,W]
-            ssim_loss = torch.clamp(ssim_loss/2, 0, 1)
+            if args.clamp_ssim:
+                ssim_loss = torch.clamp(ssim_loss/2, 0, 1)
+            elif args.normalize_ssim:
+                mean_ssim_loss = ssim_loss.mean(2, True).mean(3, True)
+                ssim_loss = ssim_loss / (mean_ssim_loss + 1e-7)
+                # ssim_loss = ssim_loss / ssim_loss
             ssim_loss = ssim_loss.mean(1, True) # [B,1,H,W]
             ssim_loss = ssim_loss * args.ssim_photometric_weight
             if explainability_mask is not None and args.use_mask_for_photometric:
@@ -86,7 +92,7 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         else:
             ssim_loss = 0
 
-        current_scale_loss = diff_loss + ssim_loss # [B,1,H,W]
+        current_scale_loss = (diff_loss + ssim_loss)*oob_normalization_const # [B,1,H,W]
 
         loss_list.append(current_scale_loss)
         warped_imgs.append(ref_img_warped[0])
