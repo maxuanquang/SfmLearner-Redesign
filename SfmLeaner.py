@@ -7,7 +7,7 @@ from torch._C import set_flush_denormal
 
 from utils import tensor2array, save_checkpoint, save_path_formatter, log_output_tensorboard
 
-from loss_functions import compute_depth_errors, compute_pose_errors
+from loss_functions import compute_depth_errors, compute_pose_errors, spatial_normalize
 from inverse_warp import pose_vec2mat
 from logger import TermLogger, AverageMeter
 
@@ -589,6 +589,8 @@ class SfmLearner():
 
             # compute output
             disparities = self.disp_net(tgt_img)
+            if self.args.spatial_normalize:
+                disparities = spatial_normalize(disparities)
             depth = [1/disp for disp in disparities]
             if self.args.use_poseexpnet:
                 explainability_mask, pose = self.pose_net(tgt_img, ref_imgs)

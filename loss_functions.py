@@ -7,6 +7,11 @@ from inverse_warp import inverse_warp
 from ssim import ssim
 epsilon = 1e-8
 
+def spatial_normalize(disp):
+    _mean = disp.mean(dim=1, keepdim=True).mean(dim=2, keepdim=True).mean(dim=3, keepdim=True)
+    disp = disp / _mean
+    return disp
+    
 def l2(x):
     x = torch.pow(x, 2)
     x = x.mean()
@@ -76,31 +81,24 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
             ssim_loss = torch.clamp(ssim_loss/2, 0, 1)
             ssim_loss = ssim_loss.mean(1, True) # [B,1,H,W]
             ssim_loss = ssim_loss * args.ssim_photometric_weight
+            if explainability_mask is not None and args.use_mask_for_photometric:
+                ssim_loss = ssim_loss * explainability_mask[:,i:i+1].expand_as(ssim_loss) # explainability_mask[:,i:i+1] = [B,1,H,W]
         else:
             ssim_loss = 0
 
-        if explainability_mask is not None and args.use_mask_for_photometric:
-            ssim_loss = ssim_loss * explainability_mask[:,i:i+1].expand_as(ssim_loss) # explainability_mask[:,i:i+1] = [B,1,H,W]
-
         current_scale_loss = diff_loss + ssim_loss # [B,1,H,W]
 
-        # if args.mean_photometric and not args.min_photometric:
-        #     reconstruction_loss += current_scale_loss.mean()
-        #     assert((reconstruction_loss == reconstruction_loss).item() == 1)
-        # elif args.min_photometric:
-            # current_loss = current_loss.mean(1)
-            # current_scale_loss = current_scale_loss.unsqueeze(1) # [B,H,W]
         loss_list.append(current_scale_loss)
         warped_imgs.append(ref_img_warped[0])
         diff_maps.append(diff[0])
     
-        # loss_tensor = torch.stack(loss_list) # [B,sequence_length-1,H,W]
     loss_tensor = torch.cat(loss_list, 1) # [B,sequence_length-1,H,W]
     if args.min_photometric:
         loss_tensor = loss_tensor.min(1)[0]
         reconstruction_loss += loss_tensor.mean()
     else:
-        reconstruction_loss += loss_tensor.mean()
+        for i in range(loss_tensor.shape[1]):
+            reconstruction_loss += loss_tensor[:,i,:,:].mean() # consistent with original pytorch implementation
 
     return reconstruction_loss, warped_imgs, diff_maps
 

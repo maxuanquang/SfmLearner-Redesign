@@ -393,6 +393,9 @@ class SfmLearnerConfig:
                                 type=str, 
                                 default='demo',
                                 help='name of the experiment, checkpoints are stored in checkpoints/name')
+        self.parser.add_argument('--spatial-normalize',
+                                action='store_true',
+                                help='spatial normalize disparity map')
         self.parser.add_argument('--resume',
                                 action='store_true',
                                 help='resume from checkpoint')
