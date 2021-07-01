@@ -1,4 +1,4 @@
-from loss_functions import photometric_reconstruction_loss, explainability_loss, photometric_reconstruction_results, smooth_loss, photometric_flow_loss, consensus_depth_flow_mask
+from loss_functions import photometric_reconstruction_loss, explainability_loss, photometric_reconstruction_results, smooth_loss#, photometric_flow_loss, consensus_depth_flow_mask
 
 class SfmLearnerLoss():
     def __init__(self, args):
