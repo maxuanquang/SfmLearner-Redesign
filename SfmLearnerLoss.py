@@ -1,4 +1,4 @@
-from loss_functions import photometric_reconstruction_loss, explainability_loss, photometric_reconstruction_results, smooth_loss, photometric_flow_loss, consensus_depth_flow_mask
+from loss_functions import photometric_reconstruction_loss, explainability_loss, photometric_reconstruction_results, smooth_loss, edge_aware_smoothness_loss
 
 class SfmLearnerLoss():
     def __init__(self, args):
@@ -24,15 +24,20 @@ class SfmLearnerLoss():
             
         if w3 > 0:
             loss_3 = 0
-            if self.args.depth_smooth_weight > 0:
-                loss_3 += smooth_loss(depth, self.args)*self.args.depth_smooth_weight
-            if self.args.disp_smooth_weight > 0:
-                disparities = [1/d for d in depth]
-                loss_3 += smooth_loss(disparities, self.args)*self.args.disp_smooth_weight
-            # if self.args.use_flow_smooth:
-            #     loss_3 += smooth_loss(flow)*self.args.flow_smooth_weight
-            if self.args.mask_smooth_weight > 0:
-                loss_3 += smooth_loss(explainability_mask)*self.args.mask_smooth_weight
+            if self.args.smoothness_type == "regular":
+                if self.args.depth_smooth_weight > 0:
+                    loss_3 += smooth_loss(depth, self.args)*self.args.depth_smooth_weight
+                if self.args.disp_smooth_weight > 0:
+                    disparities = [1/d for d in depth]
+                    loss_3 += smooth_loss(disparities, self.args)*self.args.disp_smooth_weight
+                # if self.args.use_flow_smooth:
+                #     loss_3 += smooth_loss(flow)*self.args.flow_smooth_weight
+                if self.args.mask_smooth_weight > 0:
+                    loss_3 += smooth_loss(explainability_mask)*self.args.mask_smooth_weight
+            elif self.args.smoothness_type == "edgeaware":
+                loss_3 += edge_aware_smoothness_loss(tgt_img, depth)
+            else:
+                assert(False)
         else:
             loss_3 = 0
 

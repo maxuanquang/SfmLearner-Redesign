@@ -48,7 +48,6 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
 
     warped_imgs = []
     diff_maps = []
-    loss_list = []
 
     for i, ref_img in enumerate(ref_imgs_scaled):
         current_pose = pose[:, i]
@@ -56,41 +55,21 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         ref_img_warped, valid_points = inverse_warp(ref_img, depth[:,0], current_pose,
                                                     intrinsics_scaled,
                                                     args.rotation_mode, args.padding_mode)
-        diff = (tgt_img_scaled - ref_img_warped) * valid_points.unsqueeze(1).float()
+        valid_pixels = valid_points.unsqueeze(1).float()
+        diff = (tgt_img_scaled - ref_img_warped) * valid_pixels
+        ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_pixels
+        oob_normalization_const = valid_pixels.nelement()/valid_pixels.sum()
 
-        diff_loss = 0
-        if args.L1_photometric_weight > 0:
-            diff_loss += l1_per_pix(diff)*args.L1_photometric_weight
-        if args.robust_L1_photometric_weight > 0:
-            diff_loss += robust_l1_per_pix(diff)*args.robust_L1_photometric_weight
-        if args.L2_photometric_weight > 0:
-            diff_loss += l2_per_pix(diff)*args.L2_photometric_weight
+        if explainability_mask is not None:
+            diff = diff * explainability_mask[:,i:i+1].expand_as(diff)
+            ssim_loss = ssim_loss * explainability_mask[:,i:i+1].expand_as(ssim_loss)
 
-        if args.ssim_photometric_weight > 0:
-            ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_points.unsqueeze(1).float()
-            ssim_loss = ssim_loss * args.ssim_photometric_weight
-        else:
-            ssim_loss = 0
-
-        current_loss = diff_loss + ssim_loss
-
-        if explainability_mask is not None and args.use_mask_for_photometric:
-            current_loss = current_loss * explainability_mask[:,i:i+1].expand_as(current_loss)
-
-        if args.mean_photometric and not args.min_photometric:
-            reconstruction_loss += current_loss.mean()
-            assert((reconstruction_loss == reconstruction_loss).item() == 1)
-        elif args.min_photometric:
-            current_loss = current_loss.mean(1)
-            loss_list.append(current_loss)
+        reconstruction_loss += oob_normalization_const*(args.L1_photometric_weight*l1(diff) + args.ssim_photometric_weight*ssim_loss.mean())
+        #weight /= 2.83
+        assert((reconstruction_loss == reconstruction_loss).item() == 1)                
 
         warped_imgs.append(ref_img_warped[0])
         diff_maps.append(diff[0])
-    
-    if args.min_photometric:
-        loss_tensor = torch.stack(loss_list)
-        loss_tensor = loss_tensor.min(0)[0]
-        reconstruction_loss = loss_tensor.mean()
 
     return reconstruction_loss, warped_imgs, diff_maps
 
@@ -173,93 +152,39 @@ def smooth_loss(pred_map, args):
             weight /= 2.3  # don't ask me why it works better
         return loss
 
+def edge_aware_smoothness_loss(img, pred_disp):
+    def gradient_x(img):
+        gx = img[:,:,:-1,:] - img[:,:,1:,:]
+        return gx
 
-def photometric_flow_loss(tgt_img, ref_imgs, flows, explainability_mask, lambda_oob=0, qch=0.5, wssim=0.5, use_occ_mask_at_scale=False):
-    def one_scale(explainability_mask, occ_masks, flows):
-        assert(explainability_mask is None or flows[0].size()[2:] == explainability_mask.size()[2:])
-        assert(len(flows) == len(ref_imgs))
+    def gradient_y(img):
+        gy = img[:,:,:,:-1] - img[:,:,:,1:]
+        return gy
 
-        reconstruction_loss = 0
-        b, _, h, w = flows[0].size()
-        downscale = tgt_img.size(2)/h
+    def get_edge_smoothness(img, pred):
+        pred_gradients_x = gradient_x(pred)
+        pred_gradients_y = gradient_y(pred)
 
-        tgt_img_scaled = nn.functional.adaptive_avg_pool2d(tgt_img, (h, w))
-        ref_imgs_scaled = [nn.functional.adaptive_avg_pool2d(ref_img, (h, w)) for ref_img in ref_imgs]
+        image_gradients_x = gradient_x(img)
+        image_gradients_y = gradient_y(img)
 
-        weight = 1.
+        weights_x = torch.exp(-torch.mean(torch.abs(image_gradients_x), 1, keepdim=True))
+        weights_y = torch.exp(-torch.mean(torch.abs(image_gradients_y), 1, keepdim=True))
 
-        for i, ref_img in enumerate(ref_imgs_scaled):
-            current_flow = flows[i]
-
-            ref_img_warped = flow_warp(ref_img, current_flow)
-            valid_pixels = 1 - (ref_img_warped == 0).prod(1, keepdim=True).type_as(ref_img_warped)
-            diff = (tgt_img_scaled - ref_img_warped) * valid_pixels
-            ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_pixels
-            oob_normalization_const = valid_pixels.nelement()/valid_pixels.sum()
-
-            if explainability_mask is not None:
-                diff = diff * explainability_mask[:,i:i+1].expand_as(diff)
-                ssim_loss = ssim_loss * explainability_mask[:,i:i+1].expand_as(ssim_loss)
-
-            if occ_masks is not None:
-                diff = diff *(1-occ_masks[:,i:i+1]).expand_as(diff)
-                ssim_loss = ssim_loss*(1-occ_masks[:,i:i+1]).expand_as(ssim_loss)
-
-            reconstruction_loss += (1- wssim)*weight*oob_normalization_const*(robust_l1(diff, q=qch) + wssim*ssim_loss.mean()) + lambda_oob*robust_l1(1 - valid_pixels, q=qch)
-            #weight /= 2.83
-            assert((reconstruction_loss == reconstruction_loss).item() == 1)
-
-        return reconstruction_loss
-
-    if type(flows[0]) not in [tuple, list]:
-        if explainability_mask is not None:
-            explainability_mask = [explainability_mask]
-        flows = [[uv] for uv in flows]
+        smoothness_x = torch.abs(pred_gradients_x) * weights_x
+        smoothness_y = torch.abs(pred_gradients_y) * weights_y
+        return torch.mean(smoothness_x) + torch.mean(smoothness_y)
 
     loss = 0
-    for i in range(len(flows[0])):
-        flow_at_scale = [uv[i] for uv in flows]
-        occ_mask_at_scale_bw, occ_mask_at_scale_fw  = occlusion_masks(flow_at_scale[0], flow_at_scale[1])
-        occ_mask_at_scale = torch.stack((occ_mask_at_scale_bw, occ_mask_at_scale_fw), dim=1)
-        if use_occ_mask_at_scale == False:
-            occ_mask_at_scale = None
-        loss += one_scale(explainability_mask[i], occ_mask_at_scale, flow_at_scale)
+    weight = 1.
+
+    for scaled_disp in pred_disp:
+        b, _, h, w = scaled_disp.size()
+        scaled_img = nn.functional.adaptive_avg_pool2d(img, (h, w))
+        loss += get_edge_smoothness(scaled_img, scaled_disp)
+        weight /= 2.3   # 2sqrt(2)
 
     return loss
-
-
-def consensus_depth_flow_mask(explainability_mask, census_mask_bwd, census_mask_fwd, exp_masks_bwd_target, exp_masks_fwd_target, THRESH, wbce):
-    # Loop over each scale
-    assert(len(explainability_mask)==len(census_mask_bwd))
-    assert(len(explainability_mask)==len(census_mask_fwd))
-    loss = 0.
-    for i in range(len(explainability_mask)):
-        exp_mask_one_scale = explainability_mask[i]
-        census_mask_fwd_one_scale = (census_mask_fwd[i] < THRESH).type_as(exp_mask_one_scale).prod(dim=1, keepdim=True)
-        census_mask_bwd_one_scale = (census_mask_bwd[i] < THRESH).type_as(exp_mask_one_scale).prod(dim=1, keepdim=True)
-
-        #Using the pixelwise consensus term
-        exp_fwd_target_one_scale = exp_masks_fwd_target[i]
-        exp_bwd_target_one_scale = exp_masks_bwd_target[i]
-        census_mask_fwd_one_scale = logical_or(census_mask_fwd_one_scale, exp_fwd_target_one_scale)
-        census_mask_bwd_one_scale = logical_or(census_mask_bwd_one_scale, exp_bwd_target_one_scale)
-
-        # OR gate for constraining only rigid pixels
-        # exp_mask_fwd_one_scale = (exp_mask_one_scale[:,2].unsqueeze(1) > 0.5).type_as(exp_mask_one_scale)
-        # exp_mask_bwd_one_scale = (exp_mask_one_scale[:,1].unsqueeze(1) > 0.5).type_as(exp_mask_one_scale)
-        # census_mask_fwd_one_scale = 1- (1-census_mask_fwd_one_scale)*(1-exp_mask_fwd_one_scale)
-        # census_mask_bwd_one_scale = 1- (1-census_mask_bwd_one_scale)*(1-exp_mask_bwd_one_scale)
-
-        census_mask_fwd_one_scale = Variable(census_mask_fwd_one_scale.data, requires_grad=False)
-        census_mask_bwd_one_scale = Variable(census_mask_bwd_one_scale.data, requires_grad=False)
-
-        rigidity_mask_combined = torch.cat((census_mask_bwd_one_scale, census_mask_bwd_one_scale,
-                        census_mask_fwd_one_scale, census_mask_fwd_one_scale), dim=1)
-        loss += weighted_binary_cross_entropy(exp_mask_one_scale, rigidity_mask_combined.type_as(exp_mask_one_scale), [wbce, 1-wbce])
-
-    return loss
-
-
 
 @torch.no_grad()
 def compute_depth_errors(gt, pred, crop=True):

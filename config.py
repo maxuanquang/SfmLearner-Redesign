@@ -190,6 +190,12 @@ class SfmLearnerConfig:
         #                         default=False, 
         #                         help='use mask for calculate smoothness loss')
 
+        self.parser.add_argument('--smoothness-type', 
+                                dest='smoothness_type', 
+                                type=str, default='regular', 
+                                choices=['edgeaware', 'regular'],
+                                help='Compute mean-std locally or globally')
+
         self.parser.add_argument('--disp-smooth-weight', 
                                 type=float, 
                                 default=0,
