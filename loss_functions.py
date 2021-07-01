@@ -76,26 +76,27 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         else:
             ssim_loss = 0
 
-        current_loss = diff_loss + ssim_loss
+        current_scale_loss = diff_loss + ssim_loss # [B,1,H,W]
 
         if explainability_mask is not None and args.use_mask_for_photometric:
-            current_loss = current_loss * explainability_mask[:,i:i+1].expand_as(current_loss) # explainability_mask[:,i:i+1] = [B,1,H,W]
+            current_scale_loss = current_scale_loss * explainability_mask[:,i:i+1].expand_as(current_scale_loss) # explainability_mask[:,i:i+1] = [B,1,H,W]
 
         if args.mean_photometric and not args.min_photometric:
-            reconstruction_loss += current_loss.mean()
+            reconstruction_loss += current_scale_loss.mean()
             assert((reconstruction_loss == reconstruction_loss).item() == 1)
         elif args.min_photometric:
             # current_loss = current_loss.mean(1)
-            current_loss = current_loss.unsqueeze(1)
-            loss_list.append(current_loss)
+            # current_scale_loss = current_scale_loss.unsqueeze(1) # [B,H,W]
+            loss_list.append(current_scale_loss)
 
         warped_imgs.append(ref_img_warped[0])
         diff_maps.append(diff[0])
     
     if args.min_photometric:
-        loss_tensor = torch.stack(loss_list)
-        loss_tensor = loss_tensor.min(0)[0]
-        reconstruction_loss = loss_tensor.mean()
+        # loss_tensor = torch.stack(loss_list) # [B,sequence_length-1,H,W]
+        loss_tensor = torch.cat(loss_list, 1) # [B,sequence_length-1,H,W]
+        loss_tensor = loss_tensor.min(1)[0]
+        reconstruction_loss += loss_tensor.mean()
 
     return reconstruction_loss, warped_imgs, diff_maps
 
