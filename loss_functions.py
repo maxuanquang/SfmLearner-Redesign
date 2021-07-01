@@ -71,7 +71,7 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         if args.ssim_photometric_weight > 0:
             ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_points.unsqueeze(1).float() # [B,3,H,W]
             ssim_loss = torch.clamp(ssim_loss/2, 0, 1)
-            ssim_loss = ssim_loss.mean(1, True)
+            ssim_loss = ssim_loss.mean(1, True) # [B,1,H,W]
             ssim_loss = ssim_loss * args.ssim_photometric_weight
         else:
             ssim_loss = 0
@@ -81,21 +81,22 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         if explainability_mask is not None and args.use_mask_for_photometric:
             current_scale_loss = current_scale_loss * explainability_mask[:,i:i+1].expand_as(current_scale_loss) # explainability_mask[:,i:i+1] = [B,1,H,W]
 
-        if args.mean_photometric and not args.min_photometric:
-            reconstruction_loss += current_scale_loss.mean()
-            assert((reconstruction_loss == reconstruction_loss).item() == 1)
-        elif args.min_photometric:
+        # if args.mean_photometric and not args.min_photometric:
+        #     reconstruction_loss += current_scale_loss.mean()
+        #     assert((reconstruction_loss == reconstruction_loss).item() == 1)
+        # elif args.min_photometric:
             # current_loss = current_loss.mean(1)
             # current_scale_loss = current_scale_loss.unsqueeze(1) # [B,H,W]
-            loss_list.append(current_scale_loss)
-
+        loss_list.append(current_scale_loss)
         warped_imgs.append(ref_img_warped[0])
         diff_maps.append(diff[0])
     
-    if args.min_photometric:
         # loss_tensor = torch.stack(loss_list) # [B,sequence_length-1,H,W]
-        loss_tensor = torch.cat(loss_list, 1) # [B,sequence_length-1,H,W]
+    loss_tensor = torch.cat(loss_list, 1) # [B,sequence_length-1,H,W]
+    if args.min_photometric:
         loss_tensor = loss_tensor.min(1)[0]
+        reconstruction_loss += loss_tensor.mean()
+    else:
         reconstruction_loss += loss_tensor.mean()
 
     return reconstruction_loss, warped_imgs, diff_maps
