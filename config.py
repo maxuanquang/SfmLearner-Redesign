@@ -406,8 +406,8 @@ class SfmLearnerConfig:
 #endregion
 
 #region EVALUATING & INFERENCING
-        self.parser.add_argument("--img-height", default=128, type=int, help="Image height")
-        self.parser.add_argument("--img-width", default=416, type=int, help="Image width")
+        self.parser.add_argument("--img-height", default=256, type=int, help="Image height")
+        self.parser.add_argument("--img-width", default=832, type=int, help="Image width")
         self.parser.add_argument("--no-resize", action='store_true', help="no resizing is done")
         self.parser.add_argument("--min-depth", default=1e-3)
         self.parser.add_argument("--max-depth", default=80)
