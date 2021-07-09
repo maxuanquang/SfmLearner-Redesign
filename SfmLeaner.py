@@ -124,38 +124,22 @@ class SfmLearner():
             # remember lowest error and save checkpoint
             is_best = decisive_error <= self.best_error
             self.best_error = min(self.best_error, decisive_error)
-            if self.args.use_poseexpnet:
-                save_checkpoint(
-                    self.args.save_path, {
-                        'epoch': epoch + 1,
-                        'state_dict': self.disp_net.module.state_dict(),
-                        'name': "dispnet"
-                    }, {
-                        'epoch': epoch + 1,
-                        'state_dict': self.pose_net.module.state_dict(),
-                        'name': "pose_exp"
-                    }, {
-                        'epoch': epoch + 1,
-                        'state_dict': self.optimizer.state_dict(),
-                        'name': "optimizer"
-                    },
-                    is_best)
-            else:
-                save_checkpoint(
-                    self.args.save_path, {
-                        'epoch': epoch + 1,
-                        'state_dict': self.disp_net.module.state_dict(),
-                        'name': "dispnet"
-                    }, {
-                        'epoch': epoch + 1,
-                        'state_dict': self.pose_net.module.state_dict(),
-                        'name': "posenet"
-                    }, {
-                        'epoch': epoch + 1,
-                        'state_dict': self.optimizer.state_dict(),
-                        'name': "optimizer"
-                    },
-                    is_best)
+            save_checkpoint(
+                self.args.save_path, {
+                    'epoch': epoch + 1,
+                    'state_dict': self.disp_net.module.state_dict(),
+                    'name': "dispnet"
+                }, {
+                    'epoch': epoch + 1,
+                    'state_dict': self.pose_net.module.state_dict(),
+                    'name': "posenet"
+                }, {
+                    'epoch': epoch + 1,
+                    'state_dict': self.optimizer.state_dict(),
+                    'name': "optimizer"
+                },
+                is_best)
+
             self.reporter.update_log_summary(train_loss, decisive_error, errors)
             with open(self.args.save_path/'n_iter.txt','w') as f:
                 f.write(str(self.n_iter))
