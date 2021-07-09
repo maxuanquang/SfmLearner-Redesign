@@ -74,6 +74,11 @@ class SfmLearnerConfig:
                                 type=float,
                                 metavar='W', 
                                 help='weight decay')
+        self.parser.add_argument('--pretrained-optimizer', 
+                                dest='pretrained_optimizer', 
+                                default=None, 
+                                metavar='PATH',
+                                help='path to pre-trained optimizer')
         #endregion
 
         #region CONFIG LOSS FUNCTION

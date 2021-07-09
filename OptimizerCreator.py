@@ -17,8 +17,12 @@ class OptimizerCreator():
                                     weight_decay=self.args.weight_decay)
 
         if self.args.resume and (self.args.save_path/'optimizer_checkpoint.pth.tar').exists():
-            print("=> loading optimizer from checkpoint")
+            print("=> resuming optimizer from checkpoint")
             optimizer_weights = torch.load(self.args.save_path/'optimizer_checkpoint.pth.tar')
+            optimizer.load_state_dict(optimizer_weights['state_dict'])
+        elif self.args.pretrained_optimizer and not self.args.resume:
+            print("=> using pre-trained weights for Optimizer")
+            optimizer_weights = torch.load(self.args.pretrained_optimizer)
             optimizer.load_state_dict(optimizer_weights['state_dict'])
 
         return optimizer
