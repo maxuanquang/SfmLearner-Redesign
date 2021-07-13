@@ -191,4 +191,4 @@ class DispResNet6(nn.Module):
         if self.training:
             return disp1, disp2, disp3, disp4, disp5, disp6
         else:
-            return disp1
+            return disp1, disp2, disp3, disp4, disp5, disp6

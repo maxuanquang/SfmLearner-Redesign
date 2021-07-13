@@ -65,6 +65,14 @@ class SfmLearner():
                 val_errors = np.asarray(val_errors,dtype=np.float)
                 self.best_error = np.min(val_errors)
 
+        self.loss = []
+        self.total_not_weighted_loss = []
+        self.diff_loss = []
+        self.ssim_loss = []
+        self.photometric_reconstruction_loss = []
+        self.explainability_loss = []
+        self.smooth_loss = []
+
     def train(self):
         # create main objects
         torch.manual_seed(self.args.seed)
@@ -145,6 +153,28 @@ class SfmLearner():
                 f.write(str(self.n_iter))
             with open(self.args.save_path/'start_epoch.txt','w') as f:
                 f.write(str(epoch+1))
+
+            # self.loss = []
+            # self.total_not_weighted_loss = []
+            # self.diff_loss = []
+            # self.ssim_loss = []
+            # self.photometric_reconstruction_loss = []
+            # self.explainability_loss = []
+            # self.smooth_loss = []
+            with open(self.args.save_path/'loss.txt','w') as f:
+                f.write(self.loss)
+            with open(self.args.save_path/'total_not_weighted_loss.txt','w') as f:
+                f.write(self.total_not_weighted_loss)
+            with open(self.args.save_path/'diff_loss.txt','w') as f:
+                f.write(self.diff_loss)
+            with open(self.args.save_path/'ssim_loss.txt','w') as f:
+                f.write(self.ssim_loss)
+            with open(self.args.save_path/'photometric_reconstruction_loss.txt','w') as f:
+                f.write(self.photometric_reconstruction_loss)           
+            with open(self.args.save_path/'explainability_loss.txt','w') as f:
+                f.write(self.explainability_loss)   
+            with open(self.args.save_path/'smooth_loss.txt','w') as f:
+                f.write(self.smooth_loss)                                                        
 
 
         self.logger.epoch_bar.finish()
@@ -508,7 +538,7 @@ class SfmLearner():
             depth = depth.to(self.device)
 
             # compute output
-            output_disp = self.disp_net(tgt_img)
+            output_disp = self.disp_net(tgt_img)[0]
             output_depth = 1/output_disp[:, 0]
 
             if log_outputs and i in batches_to_log:
@@ -591,15 +621,22 @@ class SfmLearner():
 
             if log_losses:
                 self.tb_writer.add_scalar('total_loss', loss.item(), self.n_iter)
+                self.loss.append(str(loss.item()) + '\n')
                 self.tb_writer.add_scalar('total_not_weighted_loss', losses_dict['total_not_weighted_loss'].item(), self.n_iter)
+                self.total_not_weighted_loss.append(str(losses_dict['total_not_weighted_loss'].item()) + '\n')
                 self.tb_writer.add_scalar('diff_loss', losses_dict['diff_loss'].item(), self.n_iter)
+                self.diff_loss.append(str(losses_dict['diff_loss'].item()) + '\n')
                 self.tb_writer.add_scalar('ssim_loss', losses_dict['ssim_loss'].item(), self.n_iter)
+                self.ssim_loss.append(str(losses_dict['ssim_loss'].item()) + '\n')
                 if w1 > 0:
                     self.tb_writer.add_scalar('photometric_reconstruction_loss', losses_dict['photometric_reconstruction_loss'].item(), self.n_iter)
+                    self.photometric_reconstruction_loss.append(str(losses_dict['photometric_reconstruction_loss'].item()) + '\n')
                 if w2 > 0:
-                    self.tb_writer.add_scalar('explainability_loss', losses_dict['explainability_loss'], self.n_iter)
+                    self.tb_writer.add_scalar('explainability_loss', losses_dict['explainability_loss'].item(), self.n_iter)
+                    self.explainability_loss.append(str(losses_dict['explainability_loss'].item()) + '\n')
                 if w3 > 0:
-                    self.tb_writer.add_scalar('smooth_loss', losses_dict['smooth_loss'], self.n_iter)
+                    self.tb_writer.add_scalar('smooth_loss', losses_dict['smooth_loss'].item(), self.n_iter)
+                    self.smooth_loss.append(str(losses_dict['smooth_loss'].item()) + '\n')
                 # if w4 > 0:
                 #     self.tb_writer.add_scalar('photometric_flow_loss', losses_dict['photometric_flow_loss'].item(), self.n_iter)
                 # if w5 > 0:
