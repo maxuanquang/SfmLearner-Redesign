@@ -162,19 +162,19 @@ class SfmLearner():
             # self.explainability_loss = []
             # self.smooth_loss = []
             with open(self.args.save_path/'loss.txt','w') as f:
-                f.write(self.loss)
+                f.writelines(self.loss)
             with open(self.args.save_path/'total_not_weighted_loss.txt','w') as f:
-                f.write(self.total_not_weighted_loss)
+                f.writelines(self.total_not_weighted_loss)
             with open(self.args.save_path/'diff_loss.txt','w') as f:
-                f.write(self.diff_loss)
+                f.writelines(self.diff_loss)
             with open(self.args.save_path/'ssim_loss.txt','w') as f:
-                f.write(self.ssim_loss)
+                f.writelines(self.ssim_loss)
             with open(self.args.save_path/'photometric_reconstruction_loss.txt','w') as f:
-                f.write(self.photometric_reconstruction_loss)           
+                f.writelines(self.photometric_reconstruction_loss)           
             with open(self.args.save_path/'explainability_loss.txt','w') as f:
-                f.write(self.explainability_loss)   
+                f.writelines(self.explainability_loss)   
             with open(self.args.save_path/'smooth_loss.txt','w') as f:
-                f.write(self.smooth_loss)                                                        
+                f.writelines(self.smooth_loss)                                                        
 
 
         self.logger.epoch_bar.finish()
