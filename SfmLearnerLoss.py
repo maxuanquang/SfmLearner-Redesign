@@ -13,7 +13,7 @@ class SfmLearnerLoss():
         # w5 = self.args.consensus_depth_flow_loss_weight
 
         if w1 > 0:
-            loss_1 = photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose, self.args)
+            loss_1, diff_loss, ssim_loss = photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose, self.args)
         else:
             loss_1 = 0
 
@@ -54,12 +54,15 @@ class SfmLearnerLoss():
         #     loss_5 = 0
         
         loss = w1*loss_1 + w2*loss_2 + w3*loss_3# + w4*loss_4 + w5*loss_5
-
+        total_not_weighted_loss = diff_loss + ssim_loss + loss_2 + loss_3
         losses_dict = {
             'total_loss': loss,
+            'total_not_weighted_loss': total_not_weighted_loss,
             'photometric_reconstruction_loss': loss_1,
             'explainability_loss': loss_2,
             'smooth_loss': loss_3,
+            'diff_loss': diff_loss,
+            'ssim_loss': ssim_loss,
             # 'photometric_flow_loss': loss_4,
             # 'consensus_depth_flow_loss': loss_5
         }

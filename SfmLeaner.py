@@ -587,6 +587,9 @@ class SfmLearner():
 
             if log_losses:
                 self.tb_writer.add_scalar('total_loss', loss.item(), self.n_iter)
+                self.tb_writer.add_scalar('total_not_weighted_loss', losses_dict['total_not_weighted_loss'].item(), self.n_iter)
+                self.tb_writer.add_scalar('diff_loss', losses_dict['diff_loss'].item(), self.n_iter)
+                self.tb_writer.add_scalar('ssim_loss', losses_dict['ssim_loss'].item(), self.n_iter)
                 if w1 > 0:
                     self.tb_writer.add_scalar('photometric_reconstruction_loss', losses_dict['photometric_reconstruction_loss'].item(), self.n_iter)
                 if w2 > 0:
@@ -610,9 +613,10 @@ class SfmLearner():
             losses.update(loss.item(), self.args.batch_size)
 
             # compute gradient and do Adam step
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
+            if self.args.lr > 0:
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
 
             # measure elapsed time
             batch_time.update(time.time() - end)

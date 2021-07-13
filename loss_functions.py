@@ -39,6 +39,8 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
     assert(pose.size(1) == len(ref_imgs))
 
     reconstruction_loss = 0
+    scale_diff_loss = 0
+    scale_ssim_loss = 0
     b, _, h, w = depth.size()
     downscale = tgt_img.size(2)/h
 
@@ -65,13 +67,15 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
             ssim_loss = ssim_loss * explainability_mask[:,i:i+1].expand_as(ssim_loss)
 
         reconstruction_loss += args.L1_photometric_weight*oob_normalization_const*(l1(diff) + args.ssim_photometric_weight*ssim_loss.mean())
+        scale_diff_loss += l1(diff)
+        scale_ssim_loss += ssim_loss
         #weight /= 2.83
         assert((reconstruction_loss == reconstruction_loss).item() == 1)                
 
         warped_imgs.append(ref_img_warped[0])
         diff_maps.append(diff[0])
 
-    return reconstruction_loss, warped_imgs, diff_maps
+    return reconstruction_loss, warped_imgs, diff_maps, scale_diff_loss, scale_ssim_loss
 
 def photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose, args):
 
@@ -81,10 +85,14 @@ def photometric_reconstruction_loss(tgt_img, ref_imgs, intrinsics, depth, explai
         depth = [depth]
 
     total_loss = 0
+    total_diff_loss = 0
+    total_ssim_loss = 0
     for d, mask in zip(depth, explainability_mask):
-        loss, _, _ = one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, d, mask, pose, args)
+        loss, _, _, diff_loss, ssim_loss = one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, d, mask, pose, args)
         total_loss += loss
-    return total_loss
+        total_diff_loss += diff_loss
+        total_ssim_loss += ssim_loss
+    return total_loss, total_diff_loss, total_ssim_loss
 
 def photometric_reconstruction_results(tgt_img, ref_imgs, intrinsics, depth, explainability_mask, pose, args):
 
@@ -95,7 +103,7 @@ def photometric_reconstruction_results(tgt_img, ref_imgs, intrinsics, depth, exp
         depth = [depth]
 
     for d, mask in zip(depth, explainability_mask):
-        _, warped, diff = one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, d, mask, pose, args)
+        _, warped, diff, _, _ = one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, d, mask, pose, args)
         warped_results.append(warped)
         diff_results.append(diff)
     return warped_results, diff_results
