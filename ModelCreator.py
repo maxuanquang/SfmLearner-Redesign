@@ -91,10 +91,7 @@ class ModelCreator():
                 pose_net.load_state_dict(weights['state_dict'], strict=False)
             elif self.args.resume:
                 print("=> resuming posenet from checkpoint")
-                if self.args.use_poseexpnet:
-                    weights = torch.load(self.args.save_path/'pose_exp_checkpoint.pth.tar')
-                else:
-                    weights = torch.load(self.args.save_path/'posenet_checkpoint.pth.tar')
+                weights = torch.load(self.args.save_path/'posenet_checkpoint.pth.tar')
                 pose_net.load_state_dict(weights['state_dict'])
             else:
                 print('=> initializing Posenet weights')
