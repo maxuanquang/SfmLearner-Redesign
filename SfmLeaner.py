@@ -555,8 +555,12 @@ class SfmLearner():
         # w5 = self.args.consensus_depth_flow_loss_weight
 
         # switch to train mode
-        self.disp_net.train()
-        self.pose_net.train()
+        if self.args.lr > 0:
+            self.disp_net.train()
+            self.pose_net.train()
+        else:
+            self.disp_net.eval()
+            self.pose_net.eval()
 
         end = time.time()
         self.logger.train_bar.update(0)

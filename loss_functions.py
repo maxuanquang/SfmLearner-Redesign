@@ -68,7 +68,7 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
 
         reconstruction_loss += args.L1_photometric_weight*oob_normalization_const*(l1(diff) + args.ssim_photometric_weight*ssim_loss.mean())
         scale_diff_loss += l1(diff)
-        scale_ssim_loss += ssim_loss
+        scale_ssim_loss += ssim_loss.mean()
         #weight /= 2.83
         assert((reconstruction_loss == reconstruction_loss).item() == 1)                
 
