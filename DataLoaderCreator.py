@@ -15,8 +15,8 @@ class DataLoaderCreator():
         if mode == 'train':
             # Data loading code
             train_transform = custom_transforms.Compose([
-                custom_transforms.RandomHorizontalFlip(),
-                custom_transforms.RandomScaleCrop(),
+#                 custom_transforms.RandomHorizontalFlip(),
+#                 custom_transforms.RandomScaleCrop(),
                 custom_transforms.ArrayToTensor(),
                 custom_transforms.Normalize(mean=[0.5, 0.5, 0.5],
                                             std=[0.5, 0.5, 0.5])
