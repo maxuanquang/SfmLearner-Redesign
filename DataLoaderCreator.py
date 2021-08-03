@@ -11,6 +11,7 @@ class DataLoaderCreator():
             from datasets.stacked_sequence_folders import SequenceFolder
         elif self.args.dataset_format == 'sequential':
             from datasets.sequence_folders import SequenceFolder
+            from datasets.sequence_folders import SequenceFolderPickle
 
         if mode == 'train':
             # Data loading code
@@ -23,7 +24,7 @@ class DataLoaderCreator():
             ])
 
             print("=> fetching scenes in '{}'".format(self.args.dataset_dir))
-            train_set = SequenceFolder(
+            train_set = SequenceFolderPickle(
                 self.args.dataset_dir,
                 transform=train_transform,
                 seed=self.args.seed,
