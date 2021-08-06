@@ -24,6 +24,7 @@ class SequenceFolder(data.Dataset):
     def __init__(self, root, seed=None, train=True, sequence_length=3, transform=None, target_transform=None):
         np.random.seed(seed)
         random.seed(seed)
+        self.seed = seed
         self.root = Path(root)
         scene_list_path = self.root/'train.txt' if train else self.root/'val.txt'
         self.scenes = [self.root/folder[:-1] for folder in open(scene_list_path)]
@@ -45,6 +46,7 @@ class SequenceFolder(data.Dataset):
                 for j in shifts:
                     sample['ref_imgs'].append(imgs[i+j])
                 sequence_set.append(sample)
+        random.seed(self.seed)
         random.shuffle(sequence_set)
         self.samples = sequence_set
 
