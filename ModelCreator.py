@@ -33,6 +33,7 @@ class ModelCreator():
                 disp_net.load_state_dict(weights['state_dict'])
             else:
                 print("=> intializing Dispnet weights")
+                torch.manual_seed(self.args.seed)
                 disp_net.init_weights()
 
             cudnn.benchmark = True
@@ -95,6 +96,7 @@ class ModelCreator():
                 pose_net.load_state_dict(weights['state_dict'])
             else:
                 print('=> initializing Posenet weights')
+                torch.manual_seed(self.args.seed)
                 pose_net.init_weights()
 
             cudnn.benchmark = True

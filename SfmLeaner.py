@@ -32,6 +32,8 @@ class SfmLearner():
         save_path = Path(self.args.name)
         self.args.save_path = self.args.checkpoint_folder/save_path
 
+        torch.manual_seed(self.args.seed)
+
         self.best_error = -1
         self.n_iter = 0 
         self.start_epoch = 0
@@ -75,8 +77,6 @@ class SfmLearner():
 
     def train(self):
         # create main objects
-        torch.manual_seed(self.args.seed)
-
         model_creator = ModelCreator(self.args)
         optimizer_creator = OptimizerCreator(self.args)
         dataloader_creator = DataLoaderCreator(self.args)
