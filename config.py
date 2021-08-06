@@ -407,6 +407,9 @@ class SfmLearnerConfig:
         self.parser.add_argument('--resume',
                                 action='store_true',
                                 help='resume from checkpoint')
+        self.parser.add_argument('--shuffle',
+                                action='store_true',
+                                help='shuffle training set')
         #endregion
 #endregion
 

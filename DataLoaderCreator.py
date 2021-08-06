@@ -34,7 +34,7 @@ class DataLoaderCreator():
             print('{} samples found in {} train scenes'.format(len(train_set), len(train_set.scenes)))
 
             train_loader = torch.utils.data.DataLoader(
-                train_set, batch_size=self.args.batch_size, shuffle=False,
+                train_set, batch_size=self.args.batch_size, shuffle=self.args.shuffle,
                 num_workers=self.args.workers, pin_memory=True)
 
             return train_loader
