@@ -346,6 +346,7 @@ class SfmLearner():
         dataloader_creator = DataLoaderCreator(self.args)
 
         self.disp_net = model_creator.create(model='dispnet')
+        self.disp_net.eval()
         self.inference_loader = dataloader_creator.create(mode='infer_dispnet')
 
         output_dir = Path(self.args.output_dir)
