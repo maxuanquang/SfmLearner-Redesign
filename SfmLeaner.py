@@ -57,6 +57,7 @@ class SfmLearner():
             with open(args.save_path/args.log_summary, 'r') as f:
                 content = f.readlines()
             content = content[1:]
+            content = content[-4:]
             if len(content) == 0:
                 pass
             else:
