@@ -377,6 +377,7 @@ class SfmLearner():
         dataloader_creator = DataLoaderCreator(self.args)
 
         self.disp_net = model_creator.create(model='dispnet')
+        self.disp_net.eval()
         self.inference_loader = dataloader_creator.create(mode='infer_dispnet')
 
         output_dir = Path(self.args.output_dir)
@@ -405,7 +406,7 @@ class SfmLearner():
             print(file_name)
 
             if self.args.output_disp:
-                disp = (255*tensor2array(output, max_value=None, colormap='bone')).astype(np.uint8)
+                disp = (255*tensor2array(output, max_value=None, colormap='magma')).astype(np.uint8)
                 imsave(output_dir/'{}_disp{}'.format(file_name, file_ext), np.transpose(disp, (1,2,0)))
             if self.args.output_depth:
                 depth = 1/output
