@@ -16,7 +16,7 @@ class DataLoaderCreator():
             # Data loading code
             train_transform = custom_transforms.Compose([
                 custom_transforms.RandomHorizontalFlip(),
-                custom_transforms.RandomScaleCrop(),
+                # custom_transforms.RandomScaleCrop(),
                 custom_transforms.ArrayToTensor(),
                 custom_transforms.Normalize(mean=[0.5, 0.5, 0.5],
                                             std=[0.5, 0.5, 0.5])
@@ -34,7 +34,7 @@ class DataLoaderCreator():
             print('{} samples found in {} train scenes'.format(len(train_set), len(train_set.scenes)))
 
             train_loader = torch.utils.data.DataLoader(
-                train_set, batch_size=self.args.batch_size, shuffle=True,
+                train_set, batch_size=self.args.batch_size, shuffle=not(self.args.no_shuffle),
                 num_workers=self.args.workers, pin_memory=True)
 
             return train_loader

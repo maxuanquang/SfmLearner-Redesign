@@ -58,13 +58,12 @@ def one_scale_reconstruction(tgt_img, ref_imgs, intrinsics, depth, explainabilit
         valid_pixels = valid_points.unsqueeze(1).float()
         diff = (tgt_img_scaled - ref_img_warped) * valid_pixels
         ssim_loss = 1 - ssim(tgt_img_scaled, ref_img_warped) * valid_pixels
-        oob_normalization_const = valid_pixels.nelement()/valid_pixels.sum()
 
         if explainability_mask is not None:
             diff = diff * explainability_mask[:,i:i+1].expand_as(diff)
             ssim_loss = ssim_loss * explainability_mask[:,i:i+1].expand_as(ssim_loss)
 
-        reconstruction_loss += args.L1_photometric_weight*oob_normalization_const*(l1(diff) + args.ssim_photometric_weight*ssim_loss.mean())
+        reconstruction_loss += args.L1_photometric_weight*l1(diff) + args.ssim_photometric_weight*ssim_loss.mean()
         #weight /= 2.83
         assert((reconstruction_loss == reconstruction_loss).item() == 1)                
 

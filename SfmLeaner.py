@@ -32,6 +32,8 @@ class SfmLearner():
         save_path = Path(self.args.name)
         self.args.save_path = self.args.checkpoint_folder/save_path
 
+        torch.manual_seed(self.args.seed)
+
         self.best_error = -1
         self.n_iter = 0 
         self.start_epoch = 0
@@ -58,6 +60,7 @@ class SfmLearner():
             if len(content) == 0:
                 pass
             else:
+                content = content[-10:] # just search best errors in 10 nearest epochs
                 val_errors = []
                 for line in content:
                     val = line.split('\t')[1]
@@ -67,8 +70,6 @@ class SfmLearner():
 
     def train(self):
         # create main objects
-        torch.manual_seed(self.args.seed)
-
         model_creator = ModelCreator(self.args)
         optimizer_creator = OptimizerCreator(self.args)
         dataloader_creator = DataLoaderCreator(self.args)
@@ -369,13 +370,10 @@ class SfmLearner():
             output = self.disp_net(tensor_img)[0]
 
             file_path, file_ext = file.relpath(self.args.dataset_dir).splitext()
-            print(file_path)
-            print(file_path.splitall())
             file_name = '-'.join(file_path.splitall()[1:])
-            print(file_name)
 
             if self.args.output_disp:
-                disp = (255*tensor2array(output, max_value=None, colormap='bone')).astype(np.uint8)
+                disp = (255*tensor2array(output, max_value=None, colormap='magma')).astype(np.uint8)
                 imsave(output_dir/'{}_disp{}'.format(file_name, file_ext), np.transpose(disp, (1,2,0)))
             if self.args.output_depth:
                 depth = 1/output
