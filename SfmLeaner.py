@@ -219,7 +219,7 @@ class SfmLearner():
             if self.args.output_dir is not None:
                 if j == 0:
                     predictions = np.zeros((len(self.test_loader), *pred_disp.shape))
-                predictions[j] = 1/pred_disp
+                predictions[j] = pred_disp
 
             gt_depth = sample['gt_depth']
 
@@ -361,7 +361,7 @@ class SfmLearner():
 
             h,w,_ = img.shape
             if (not self.args.no_resize) and (h != self.args.img_height or w != self.args.img_width):
-                img = resize(img, (self.args.img_height, self.args.img_width))
+                img = imresize(img, (self.args.img_height, self.args.img_width))
             img = np.transpose(img, (2, 0, 1))
 
             tensor_img = torch.from_numpy(img.astype(np.float32)).unsqueeze(0)
