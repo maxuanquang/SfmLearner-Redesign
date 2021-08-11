@@ -180,12 +180,12 @@ class SfmLearner():
         dataloader_creator = DataLoaderCreator(self.args)
 
         self.disp_net = model_creator.create(model='dispnet')
-        self.test_loader = dataloader_creator.create(mode='test_dispnet') 
+        self.test_loader = dataloader_creator.create(mode='test_dispnet')
 
         self.args.max_depth = int(self.args.max_depth)
         self.disp_net.eval()
 
-        print('no PoseNet specified, scale_factor will be determined by median ratio, which is kiiinda cheating (but consistent with original paper)')
+        print('No PoseNet specified, scale_factor will be determined by median ratio, which is kinda cheating (but consistent with original paper)')
         self.seq_length = 1
 
         errors = np.zeros((2, 9, len(self.test_loader)), np.float32)
@@ -244,6 +244,7 @@ class SfmLearner():
 
         if self.args.output_dir is not None:
             np.save(output_dir/'predictions.npy', predictions)
+            np.save(output_dir/'errors.npy', errors)
 
         return 0
 
