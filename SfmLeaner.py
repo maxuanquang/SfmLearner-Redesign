@@ -246,6 +246,22 @@ class SfmLearner():
             np.save(output_dir/'predictions.npy', predictions)
             np.save(output_dir/'errors.npy', errors)
 
+            # save 5% best images and 5% worst images
+            decisive_errors = errors[1][1] # abs_rel
+
+            good_value = np.percentile(decisive_errors, 5)
+            bad_value = np.percentile(decisive_errors, 95)
+
+            best_indices = np.where(decisive_errors < good_value)[0]
+            worst_indices = np.where(decisive_errors > bad_value)[0]
+
+            best_predictions = predictions[best_indices]
+            worst_predictions = predictions[worst_indices]
+
+            np.save(output_dir/'best_predictions.npy', best_predictions)
+            np.save(output_dir/'worst_predictions.npy', worst_predictions)
+
+
         return 0
 
     @torch.no_grad()
