@@ -194,17 +194,16 @@ class SfmLearner():
             output_dir.makedirs_p()
 
         tgt_imgs = []
-        gt_depths = []
 
         for j, sample in enumerate(tqdm(self.test_loader)):
             tgt_img = sample['tgt']
-            tgt_imgs.append(tgt_img)
 
             ref_imgs = sample['ref']
 
             h,w,_ = tgt_img.shape
             if (not self.args.no_resize) and (h != self.args.img_height or w != self.args.img_width):
                 tgt_img = imresize(tgt_img, (self.args.img_height, self.args.img_width)).astype(np.float32)
+                tgt_imgs.append(tgt_img)
                 ref_imgs = [imresize(img, (self.args.img_height, self.args.img_width)).astype(np.float32) for img in ref_imgs]
 
             tgt_img = np.transpose(tgt_img, (2, 0, 1))
@@ -226,7 +225,6 @@ class SfmLearner():
                 predictions[j] = pred_disp
 
             gt_depth = sample['gt_depth']
-            gt_depths.append((gt_depth))
 
             pred_depth = 1/pred_disp
             pred_depth_zoomed = zoom(pred_depth,
@@ -265,16 +263,11 @@ class SfmLearner():
             np.save(output_dir/'best_predictions.npy', best_predictions)
             np.save(output_dir/'worst_predictions.npy', worst_predictions)
 
+            tgt_imgs = np.asarray(tgt_imgs, dtype=np.int)
             best_imgs = tgt_imgs[best_indices]
             worst_imgs = tgt_imgs[worst_indices]
             np.save(output_dir/'best_imgs.npy', best_imgs)
             np.save(output_dir/'worst_imgs.npy', worst_imgs)
-
-            best_gt_depth = gt_depths[best_indices]
-            worst_gt_depth = gt_depths[worst_indices]
-            np.save(output_dir/'best_gt_depth.npy', best_gt_depth)
-            np.save(output_dir/'worst_gt_depth.npy', worst_gt_depth)
-
 
         return 0
 
