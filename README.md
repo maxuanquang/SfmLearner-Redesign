@@ -1,7 +1,8 @@
-# SfMLearner Pytorch Software Architecture Redesign version
+# SfMLearner Pytorch Architecture Redesign version
 This codebase implements the system described in the paper: Unsupervised Learning of Depth and Ego-Motion from Video
 
 Original Author : Tinghui Zhou (tinghuiz@berkeley.edu)
+
 Pytorch implementation : Clément Pinard (clement.pinard@ensta-paristech.fr)
 
 ![sample_results](misc/cityscapes_sample_results.gif)
