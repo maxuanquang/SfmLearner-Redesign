@@ -1,6 +1,8 @@
 # SfMLearner Pytorch Architecture Redesign version
 This codebase implements the system described in the paper: Unsupervised Learning of Depth and Ego-Motion from Video
 
+This codebase can easily train, test, evaluate depth models with different architectures, losses and datasets.
+
 Original Author : Tinghui Zhou (tinghuiz@berkeley.edu)
 
 Pytorch implementation : Clément Pinard (clement.pinard@ensta-paristech.fr)
@@ -122,7 +124,7 @@ Will run inference on all pictures inside `dataset-dir` and save a jpg of dispar
 Arguments used :
 
 ```bash
-!python runner.py --train \
+python runner.py --train \
 --dispnet-architecture DispResNet6 --nlevels 4 \
 --posenet-architecture PoseExpNet \
 --dataset-dir '/content/resulting_formatted_data_full' \
