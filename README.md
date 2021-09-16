@@ -1,43 +1,16 @@
 # SfMLearner Pytorch Software Architecture Redesign version
-This codebase implements the system described in the paper:
-
-Unsupervised Learning of Depth and Ego-Motion from Video
-
-[Tinghui Zhou](https://people.eecs.berkeley.edu/~tinghuiz/), [Matthew Brown](http://matthewalunbrown.com/research/research.html), [Noah Snavely](http://www.cs.cornell.edu/~snavely/), [David G. Lowe](http://www.cs.ubc.ca/~lowe/home.html)
-
-In CVPR 2017 (**Oral**).
-
-See the [project webpage](https://people.eecs.berkeley.edu/~tinghuiz/projects/SfMLearner/) for more details. 
+This codebase implements the system described in the paper: Unsupervised Learning of Depth and Ego-Motion from Video
 
 Original Author : Tinghui Zhou (tinghuiz@berkeley.edu)
 Pytorch implementation : Clément Pinard (clement.pinard@ensta-paristech.fr)
 
 ![sample_results](misc/cityscapes_sample_results.gif)
 
-## Preamble
-This codebase was developed and tested with Pytorch 1.0.1, CUDA 10 and Ubuntu 16.04. Original code was developped in tensorflow, you can access it [here](https://github.com/tinghuiz/SfMLearner)
-
 ## Prerequisite
 
 ```bash
 pip3 install -r requirements.txt
 ```
-
-or install manually the following packages :
-
-```
-pytorch >= 1.4.0
-pebble
-matplotlib
-imageio
-scipy==1.1.0
-argparse
-tensorboardX
-blessings
-progressbar2
-path.py
-```
-
 ### What has been done
 
 * Train disparity network, pose network easily with different architectures, different losses and different strategies.
@@ -55,7 +28,6 @@ python3 data/prepare_train_data.py /path/to/raw/kitti/dataset/ \
 --static-frames /path/to/static_frames.txt \
 --with-depth --with-pose
 ```
-
 
 For [Cityscapes](https://www.cityscapes-dataset.com/), download the following packages: 1) `leftImg8bit_sequence_trainvaltest.zip`, 2) `camera_trainvaltest.zip`. You will probably need to contact the administrators to be able to get it. Then run the following command
 ```bash
@@ -115,10 +87,7 @@ python runner.py --eval-dispnet \
 --dataset-dir /path/to/KITTI_raw \
 --dataset-list /path/to/test_files_list
 ```
-
-Test file list is available in kitti eval folder. To get fair comparison with [Original paper evaluation code](https://github.com/tinghuiz/SfMLearner/blob/master/kitti_eval/eval_depth.py), don't specify a posenet.
-
-Pose evaluation is also available on [Odometry dataset](http://www.cvlibs.net/datasets/kitti/eval_odometry.php). Be sure to download both color images and pose !
+Odometry evaluation is avalaible
 
 ```bash
 python3 runner.py --eval-posenet \
@@ -143,42 +112,38 @@ python runner.py --infer \
 --output-disp \
 --output-depth 
 ```
-Will run inference on all pictures inside `dataset-dir` and save a jpg of disparity (or depth) to `output-dir` for each one see script help (`-h`) for more options.
+Will run inference on all pictures inside `dataset-dir` and save a jpg of disparity (or depth) to `output-dir`.
 
 ## Pretrained Nets
 
-[Avalaible here](https://drive.google.com/drive/folders/1H1AFqSS8wr_YzwG2xWwAQHTfXN5Moxmx)
+[Avalaible here](https://drive.google.com/drive/folders/1wVTJTP7OlBoEUqk24u_esYDcA2KXvVfW?usp=sharing)
 
 Arguments used :
 
 ```bash
-python3 runner.py --train \
---dispnet-architecture DispNetS \
+!python runner.py --train \
+--dispnet-architecture DispResNet6 --nlevels 4 \
 --posenet-architecture PoseExpNet \
---dataset-dir /path/to/the/formatted/data/ \
--b4 -m0 -s2.0 \
---epoch-size 1000 epochs 200 \
---sequence-length 5 \
---log-output \
---with-gt
+--dataset-dir '/content/resulting_formatted_data_full' \
+-b 4 -p 1.0 -m 0.0 \
+--L1-photometric-weight 1.0 --ssim-photometric-weight 0.12 -s 0.21 \
+--smoothness-type edgeaware \
+--lr 1e-4 --epoch-size 3000 -f 500 --epochs 40 \
+--name SSIM_0.36_L1_0.63_Smooth_0.01
 ```
 
 ### Depth Results
 
-| Abs Rel | Sq Rel | RMSE  | RMSE(log) | Acc.1 | Acc.2 | Acc.3 |
-|---------|--------|-------|-----------|-------|-------|-------|
-| 0.181   | 1.341  | 6.236 | 0.262     | 0.733 | 0.901 | 0.964 | 
+| Abs Rel | Acc.1 |
+|---------|-------|
+| 0.176   | 0.768 |
 
 ### Pose Results
 
 5-frames snippets used
 
-|    | Seq. 09              | Seq. 10              |
-|----|----------------------|----------------------|
-|ATE | 0.0179 (std. 0.0110) | 0.0141 (std. 0.0115) |
-|RE  | 0.0018 (std. 0.0009) | 0.0018 (std. 0.0011) | 
+|    | Seq. 09|
+|----|--------|
+|ATE | 0.0128 |
+|RE  | 0.0021 |
 
-
-## Other Implementations
-
-[TensorFlow](https://github.com/tinghuiz/SfMLearner) by tinghuiz (original code, and paper author)
